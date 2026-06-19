@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
-import math
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "Assets"
@@ -14,90 +13,80 @@ ICONSET.mkdir(parents=True, exist_ok=True)
 S = 1024
 img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 
-# Reference-style composition:
-# soft shadow + light rounded square tile + centered blue circle + white simple modem/fiber glyph.
+# Soft shadow, similar to the reference app-icon tile.
 shadow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 sd = ImageDraw.Draw(shadow)
-sd.rounded_rectangle((92, 104, 932, 944), radius=205, fill=(0, 0, 0, 62))
-shadow = shadow.filter(ImageFilter.GaussianBlur(30))
+sd.rounded_rectangle((38, 50, 986, 1002), radius=210, fill=(0, 0, 0, 48))
+shadow = shadow.filter(ImageFilter.GaussianBlur(24))
 img.alpha_composite(shadow)
 
+# Large white rounded-square outer tile, close to canvas edge.
 tile = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 td = ImageDraw.Draw(tile)
-# Subtle warm-gray vertical gradient, like the provided reference.
 for y in range(S):
     t = y / (S - 1)
-    v = int(248 - 10 * t)
-    td.line((0, y, S, y), fill=(v, v, v - 2, 255))
+    r = int(250 - 12 * t)
+    g = int(251 - 13 * t)
+    b = int(250 - 14 * t)
+    td.line((0, y, S, y), fill=(r, g, b, 255))
 mask = Image.new("L", (S, S), 0)
 md = ImageDraw.Draw(mask)
-md.rounded_rectangle((88, 88, 936, 936), radius=205, fill=255)
+# Smaller transparent margin than previous version.
+md.rounded_rectangle((34, 34, 990, 990), radius=218, fill=255)
 img.alpha_composite(Image.composite(tile, Image.new("RGBA", (S, S), (0,0,0,0)), mask))
 
-# Very light inner highlight/border on tile.
 d = ImageDraw.Draw(img)
-d.rounded_rectangle((94, 94, 930, 930), radius=198, outline=(255, 255, 255, 135), width=6)
-d.rounded_rectangle((88, 88, 936, 936), radius=205, outline=(218, 224, 230, 95), width=3)
+# Very subtle edge; avoid obvious gray ring.
+d.rounded_rectangle((38, 38, 986, 986), radius=214, outline=(224, 229, 232, 42), width=2)
 
-# Center blue circle, flat and clean.
+# Center blue circle. Clean, no outer double ring.
 cx = cy = 512
-R = 306
-# Slight gradient in the blue circle, but keep it simple.
-circle = Image.new("RGBA", (S, S), (0,0,0,0))
+R = 260
+circle = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 cd = ImageDraw.Draw(circle)
-for yy in range(cy - R, cy + R + 1):
-    for xx in range(cx - R, cx + R + 1):
-        dx, dy = xx - cx, yy - cy
+for y in range(cy - R, cy + R + 1):
+    for x in range(cx - R, cx + R + 1):
+        dx, dy = x - cx, y - cy
         if dx*dx + dy*dy <= R*R:
-            t = (dy + R) / (2*R)
-            r = int(37 - 10*t)
-            g = int(178 - 34*t)
-            b = int(238 - 4*t)
-            circle.putpixel((xx, yy), (r, g, b, 255))
+            t = (dy + R) / (2 * R)
+            # Softer cyan-blue, closer to reference.
+            rr = int(37 - 10 * t)
+            gg = int(184 - 28 * t)
+            bb = int(236 - 2 * t)
+            circle.putpixel((x, y), (rr, gg, bb, 255))
 img.alpha_composite(circle)
-# Subtle circle highlight.
 d = ImageDraw.Draw(img)
-d.ellipse((cx-R+8, cy-R+8, cx+R-8, cy+R-8), outline=(255,255,255,38), width=7)
 
-# White optical modem glyph inside circle.
-# Main modem body: simple rounded rectangle.
 white = (255, 255, 255, 255)
-soft = (232, 248, 255, 245)
-body = (346, 508, 678, 626)
-d.rounded_rectangle(body, radius=38, fill=white)
-# Front band cut via blue overlay to mimic a clean flat symbol.
-d.rounded_rectangle((378, 574, 646, 602), radius=14, fill=(35, 160, 225, 255))
-# Optical/fiber port circle.
-d.ellipse((386, 534, 438, 586), fill=(35, 160, 225, 255))
-d.ellipse((402, 550, 422, 570), fill=white)
-# LED dots.
-for x in (492, 540, 588):
-    d.ellipse((x-12, 546-12, x+12, 546+12), fill=(35, 160, 225, 255))
-    d.ellipse((x-5, 546-5, x+5, 546+5), fill=white)
+blue_cut = (32, 168, 231, 255)
 
-# Optical fiber/wifi-like arcs above, compact and symmetric.
-for r, width, alpha in [(78, 16, 255), (128, 14, 235), (180, 12, 210)]:
-    bbox = (cx-r, 430-r, cx+r, 430+r)
-    d.arc(bbox, start=205, end=335, fill=(255,255,255,alpha), width=width)
-d.ellipse((cx-18, 430-18, cx+18, 430+18), fill=white)
+# Simplified white modem/router glyph, smaller and cleaner than previous version.
+# Wi-Fi arcs: two clean arcs plus center dot, closer to the compact reference symbol.
+arc_center_y = 452
+for r, width, alpha in [(58, 10, 255), (106, 9, 230)]:
+    bbox = (cx-r, arc_center_y-r, cx+r, arc_center_y+r)
+    d.arc(bbox, start=210, end=330, fill=(255, 255, 255, alpha), width=width)
+d.ellipse((cx-11, arc_center_y-11, cx+11, arc_center_y+11), fill=white)
 
-# Two small antenna strokes, simplified.
-d.line((396, 511, 344, 406), fill=soft, width=22)
-d.line((628, 511, 680, 406), fill=soft, width=22)
-d.ellipse((334, 396, 354, 416), fill=soft)
-d.ellipse((670, 396, 690, 416), fill=soft)
+# Modem body: smaller, flatter, and less detailed.
+body = (386, 532, 638, 612)
+d.rounded_rectangle(body, radius=25, fill=white)
+# Front blue cutout, only one simple band.
+d.rounded_rectangle((420, 576, 604, 594), radius=9, fill=blue_cut)
+# Optical port left.
+d.ellipse((420, 548, 452, 580), fill=blue_cut)
+d.ellipse((431, 559, 441, 569), fill=white)
+# Two tiny LED dots only.
+for x in (520, 560):
+    d.ellipse((x-7, 558-7, x+7, 558+7), fill=blue_cut)
+    d.ellipse((x-3, 558-3, x+3, 558+3), fill=white)
 
-# Small optical sparkle/fiber node in the upper-right, still no text.
-for a in range(0, 360, 60):
-    x1 = 648 + math.cos(math.radians(a))*25
-    y1 = 384 + math.sin(math.radians(a))*25
-    x2 = 648 + math.cos(math.radians(a))*43
-    y2 = 384 + math.sin(math.radians(a))*43
-    d.line((x1,y1,x2,y2), fill=(255,255,255,210), width=8)
-d.ellipse((628, 364, 668, 404), fill=white)
-d.ellipse((640, 376, 656, 392), fill=(35,160,225,255))
+# Two short antennas, simplified and kept inside the blue circle.
+d.line((422, 534, 388, 468), fill=white, width=13)
+d.line((602, 534, 636, 468), fill=white, width=13)
+d.ellipse((382, 462, 394, 474), fill=white)
+d.ellipse((630, 462, 642, 474), fill=white)
 
-# Export source png and iconset.
 img.save(PNG1024)
 
 sizes = [
