@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "Assets"
@@ -11,66 +11,59 @@ ASSETS.mkdir(parents=True, exist_ok=True)
 ICONSET.mkdir(parents=True, exist_ok=True)
 
 S = 1024
-img = Image.new("RGBA", (S, S), (250, 251, 250, 255))
+cx = cy = S // 2
 
-# Full white/light-gray background across the whole icon canvas.
-# No transparent outer margin, matching the user's request: whole icon background is white.
+# Important: the icon canvas itself is an opaque, clean white square.
+# No transparent margin, no gray gradient, no rounded card, no shadow.
+# This avoids the gray/transparent outer ring seen in Finder previews.
+img = Image.new("RGB", (S, S), (255, 255, 255))
 d = ImageDraw.Draw(img)
-for y in range(S):
-    t = y / (S - 1)
-    r = int(252 - 8 * t)
-    g = int(253 - 9 * t)
-    b = int(252 - 10 * t)
-    d.line((0, y, S, y), fill=(r, g, b, 255))
 
-# Center blue circle. Clean, no outer double ring.
-cx = cy = 512
-R = 330
-circle = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-cd = ImageDraw.Draw(circle)
+# Large centered blue circle, matching the requested structure:
+# white outside + circular blue center.  Radius intentionally increased.
+R = 405
 for y in range(cy - R, cy + R + 1):
     for x in range(cx - R, cx + R + 1):
         dx, dy = x - cx, y - cy
-        if dx*dx + dy*dy <= R*R:
+        if dx * dx + dy * dy <= R * R:
+            # Subtle vertical blue gradient only inside the circle.
             t = (dy + R) / (2 * R)
-            # Softer cyan-blue, closer to reference.
             rr = int(37 - 10 * t)
             gg = int(184 - 28 * t)
             bb = int(236 - 2 * t)
-            circle.putpixel((x, y), (rr, gg, bb, 255))
-img.alpha_composite(circle)
+            img.putpixel((x, y), (rr, gg, bb))
+
 d = ImageDraw.Draw(img)
+white = (255, 255, 255)
+blue_cut = (32, 168, 231)
 
-white = (255, 255, 255, 255)
-blue_cut = (32, 168, 231, 255)
+# White network-device glyph, scaled up to fit the larger blue circle.
+# Wi-Fi arcs.
+arc_center_y = 405
+for r, width in [(82, 15), (150, 14)]:
+    bbox = (cx - r, arc_center_y - r, cx + r, arc_center_y + r)
+    d.arc(bbox, start=210, end=330, fill=white, width=width)
+d.ellipse((cx - 16, arc_center_y - 16, cx + 16, arc_center_y + 16), fill=white)
 
-# Simplified white modem/router glyph, smaller and cleaner than previous version.
-# Wi-Fi arcs: two clean arcs plus center dot, closer to the compact reference symbol.
-arc_center_y = 438
-for r, width, alpha in [(72, 12, 255), (132, 11, 230)]:
-    bbox = (cx-r, arc_center_y-r, cx+r, arc_center_y+r)
-    d.arc(bbox, start=210, end=330, fill=(255, 255, 255, alpha), width=width)
-d.ellipse((cx-14, arc_center_y-14, cx+14, arc_center_y+14), fill=white)
+# Antennas kept fully inside the circle.
+d.line((382, 535, 318, 415), fill=white, width=20)
+d.line((642, 535, 706, 415), fill=white, width=20)
+d.ellipse((308, 405, 328, 425), fill=white)
+d.ellipse((696, 405, 716, 425), fill=white)
 
-# Modem body: smaller, flatter, and less detailed.
-body = (350, 528, 674, 634)
-d.rounded_rectangle(body, radius=32, fill=white)
-# Front blue cutout, only one simple band.
-d.rounded_rectangle((390, 590, 634, 614), radius=11, fill=blue_cut)
-# Optical port left.
-d.ellipse((392, 552, 440, 600), fill=blue_cut)
-d.ellipse((407, 567, 425, 585), fill=white)
-# Two tiny LED dots only.
-for x in (520, 570):
-    d.ellipse((x-10, 566-10, x+10, 566+10), fill=blue_cut)
-    d.ellipse((x-4, 566-4, x+4, 566+4), fill=white)
+# Modem body.
+body = (318, 528, 706, 660)
+d.rounded_rectangle(body, radius=38, fill=white)
 
-# Two short antennas, simplified and kept inside the blue circle.
-d.line((392, 530, 344, 438), fill=white, width=17)
-d.line((632, 530, 680, 438), fill=white, width=17)
-d.ellipse((336, 430, 352, 446), fill=white)
-d.ellipse((672, 430, 688, 446), fill=white)
+# Simple blue details on the modem face.
+d.rounded_rectangle((365, 612, 659, 642), radius=14, fill=blue_cut)
+d.ellipse((372, 558, 430, 616), fill=blue_cut)
+d.ellipse((392, 578, 410, 596), fill=white)
+for x in (532, 592):
+    d.ellipse((x - 12, 585 - 12, x + 12, 585 + 12), fill=blue_cut)
+    d.ellipse((x - 5, 585 - 5, x + 5, 585 + 5), fill=white)
 
+# Save source PNG as opaque RGB. Do not introduce alpha in resized icon assets.
 img.save(PNG1024)
 
 sizes = [
