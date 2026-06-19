@@ -55,3 +55,36 @@ scripts/build_release.sh                      # 一键构建 release
 - App 会把登录参数缓存在用户 Home 目录下的 `.jiulian_super_password_native_cache.json`，权限设置为 `0600`。
 - 后端调试日志默认写入用户 Home 目录，权限设置为 `0600`。
 - 发布包使用 ad-hoc 签名，不包含 Apple Developer ID 公证。首次运行可能需要在 macOS 安全设置中允许。
+
+## 版本机制
+
+项目使用两层版本号：
+
+- `VERSION`：人工维护的语义版本号，例如 `1.0.0`。
+- `BUILD_NUMBER`：构建号，每次执行 `git commit` 时由本地 `pre-commit` hook 自动递增。
+
+版本信息会自动生成到：
+
+```text
+Sources/JiulianSuperPasswordTool/GeneratedVersion.swift
+```
+
+App 界面和运行日志会显示：
+
+```text
+v1.0.0 (Build 2)
+```
+
+首次 clone 或重新配置仓库后，请执行：
+
+```bash
+./scripts/install_git_hooks.sh
+```
+
+之后每次提交时会自动：
+
+1. 递增 `BUILD_NUMBER`
+2. 重新生成 `GeneratedVersion.swift`
+3. 将版本文件加入本次 commit
+
+发布新功能版本时，手动修改 `VERSION`，例如从 `1.0.0` 改为 `1.1.0`，然后正常 commit 即可。

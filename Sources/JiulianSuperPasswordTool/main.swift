@@ -1,9 +1,10 @@
 import Cocoa
 import Foundation
 
-let appName = "九联光猫获取超级密码工具"
-let appVersion = "v1.0"
-let cacheURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".jiulian_super_password_native_cache.json")
+enum AppConstants {
+    static let appName = "九联光猫获取超级密码工具"
+    static let cacheURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".jiulian_super_password_native_cache.json")
+}
 
 struct Cache: Codable {
     var host: String = "192.168.0.1"
@@ -188,13 +189,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func loadCache() {
-        guard let data = try? Data(contentsOf: cacheURL), let c = try? JSONDecoder().decode(Cache.self, from: data) else { return }
+        guard let data = try? Data(contentsOf: AppConstants.cacheURL), let c = try? JSONDecoder().decode(Cache.self, from: data) else { return }
         hostField.stringValue = c.host; portField.stringValue = c.port; userField.stringValue = c.user; passField.stringValue = c.password; outField.stringValue = c.outputDir; cleanBox.state = c.cleanTmp ? .on : .off
     }
 
     func saveCache() {
         let c = Cache(host: hostField.stringValue, port: portField.stringValue, user: userField.stringValue, password: passField.stringValue, outputDir: outField.stringValue, cleanTmp: cleanBox.state == .on)
-        if let data = try? JSONEncoder().encode(c) { try? data.write(to: cacheURL); try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: cacheURL.path) }
+        if let data = try? JSONEncoder().encode(c) { try? data.write(to: AppConstants.cacheURL); try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: AppConstants.cacheURL.path) }
     }
 
     func label(_ text: String, x: CGFloat, y: CGFloat, w: CGFloat = 120) -> NSTextField {
@@ -207,12 +208,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func buildWindow() {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 880, height: 650), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "\(appName) \(appVersion)"
+        window.title = "\(AppConstants.appName) \(AppVersion.display)"
         window.center()
         let v = NSView(frame: window.contentView!.bounds); v.autoresizingMask = [.width, .height]; v.wantsLayer = true; v.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor; window.contentView = v
 
-        let title = NSTextField(labelWithString: "\(appName) \(appVersion)"); title.frame = NSRect(x: 28, y: 595, width: 700, height: 34); title.font = .boldSystemFont(ofSize: 28); v.addSubview(title)
+        let title = NSTextField(labelWithString: "\(AppConstants.appName) \(AppVersion.display)"); title.frame = NSRect(x: 28, y: 595, width: 700, height: 34); title.font = .boldSystemFont(ofSize: 28); v.addSubview(title)
         let sub = NSTextField(labelWithString: "本工具只获取超级管理员账号和密码。登录密码明文显示，并会缓存在本机，便于下次自动填入。"); sub.frame = NSRect(x: 30, y: 568, width: 760, height: 22); sub.textColor = .secondaryLabelColor; v.addSubview(sub)
+        let versionLabel = NSTextField(labelWithString: "版本：\(AppVersion.detail)"); versionLabel.frame = NSRect(x: 30, y: 546, width: 760, height: 20); versionLabel.textColor = .tertiaryLabelColor; versionLabel.font = .systemFont(ofSize: 12); v.addSubview(versionLabel)
 
         let x1: CGFloat = 30, x2: CGFloat = 165, x3: CGFloat = 570
         var y: CGFloat = 525
@@ -234,7 +236,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let logBox = NSBox(frame: NSRect(x: 30, y: 25, width: 820, height: 128)); logBox.title = "运行日志"; v.addSubview(logBox)
         let scroll = NSScrollView(frame: NSRect(x: 42, y: 38, width: 796, height: 95)); scroll.hasVerticalScroller = true; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
 
-        appendLog("当前软件：\(appName) \(appVersion)")
+        appendLog("当前软件：\(AppConstants.appName) \(AppVersion.detail)")
         appendLog("如果失败，日志会用红色显示原因；修正信息后可以直接重试。")
         window.makeKeyAndOrderFront(nil)
     }
@@ -272,13 +274,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-@main
-struct MainApp {
-    @MainActor
-    static func main() {
-        let app = NSApplication.shared
-        let delegate = AppDelegate()
-        app.delegate = delegate
-        app.run()
-    }
-}
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.run()
