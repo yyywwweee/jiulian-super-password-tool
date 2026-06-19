@@ -1,0 +1,94 @@
+name: Multi-platform Release Builds
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'Resources/**'
+      - 'Assets/**'
+      - 'platforms/**'
+      - 'scripts/**'
+      - 'Package.swift'
+      - 'VERSION'
+      - 'BUILD_NUMBER'
+      - '.github/workflows/release-builds.yml'
+  release:
+    types: [published]
+
+jobs:
+  build-macos:
+    name: Build macOS artifact
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies for icon generation
+        run: python3 -m pip install pillow
+      - name: Build macOS app and DMG
+        run: ./scripts/build_release.sh
+      - name: Prepare macOS release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          BUILD="$(tr -d '[:space:]' < BUILD_NUMBER)"
+          mkdir -p dist/release-assets
+          cp "dist/九联光猫获取超级密码工具-${VERSION}-build${BUILD}.dmg" "dist/release-assets/JiulianSuperPasswordTool-${VERSION}-build${BUILD}-macos-arm64.dmg"
+          cp "dist/九联光猫获取超级密码工具-${VERSION}.app.zip" "dist/release-assets/JiulianSuperPasswordTool-${VERSION}-build${BUILD}-macos-arm64.app.zip"
+      - name: Upload macOS workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JiulianSuperPasswordTool-macos
+          path: dist/release-assets/*macos-arm64*
+      - name: Attach macOS assets to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" dist/release-assets/*macos-arm64* --clobber
+
+  build-windows:
+    name: Build Windows artifact
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build Windows executable
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Prepare Windows release assets
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $build = (Get-Content BUILD_NUMBER -Raw).Trim()
+          New-Item -ItemType Directory -Force -Path dist/release-assets | Out-Null
+          Copy-Item "dist/windows/JiulianSuperPasswordTool-$version-build$build-win-x64.exe" "dist/release-assets/JiulianSuperPasswordTool-$version-build$build-windows-x64.exe" -Force
+      - name: Upload Windows workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JiulianSuperPasswordTool-windows
+          path: dist/release-assets/*windows-x64.exe
+      - name: Attach Windows assets to GitHub Release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload $env:GITHUB_REF_NAME dist/release-assets/*windows-x64.exe --clobber
+
+  android-placeholder:
+    name: Android placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Android status
+        run: |
+          echo "Android artifact is intentionally not built yet."
+          echo "Reserved structure: platforms/android/."
