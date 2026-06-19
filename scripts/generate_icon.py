@@ -17,8 +17,9 @@ S = 1024
 img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
 
-# Rounded macOS-ish background with gradient.
-bg = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+# Full-bleed macOS-style background with gradient.
+# Keep every pixel opaque so Finder does not show a gray transparent ring.
+bg = Image.new("RGBA", (S, S), (0, 0, 0, 255))
 bd = ImageDraw.Draw(bg)
 for y in range(S):
     t = y / (S - 1)
@@ -26,10 +27,9 @@ for y in range(S):
     g = int(118 + 70 * (1 - t))
     b = int(230 + 20 * (1 - t))
     bd.line([(0, y), (S, y)], fill=(r, g, b, 255))
-mask = Image.new("L", (S, S), 0)
-md = ImageDraw.Draw(mask)
-md.rounded_rectangle((64, 64, S-64, S-64), radius=210, fill=255)
-img.alpha_composite(Image.composite(bg, Image.new("RGBA", (S,S),(0,0,0,0)), mask))
+img.alpha_composite(bg)
+# Add an inner rounded highlight instead of transparent outer padding.
+d.rounded_rectangle((42, 42, S-42, S-42), radius=190, outline=(255, 255, 255, 52), width=8)
 
 # Subtle grid/network glow.
 glow = Image.new("RGBA", (S, S), (0,0,0,0))
