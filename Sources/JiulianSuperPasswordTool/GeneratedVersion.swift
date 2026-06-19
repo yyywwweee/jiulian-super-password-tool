@@ -2,10 +2,10 @@
 import Foundation
 
 enum AppVersion {
-    static let version = "1.0.0"
-    static let build = "10"
-    static let gitCommit = "58ab4a2"
-    static let generatedAt = "2026-06-19T20:07:57Z"
+    static let version = "1.0.1"
+    static let build = "11"
+    static let gitCommit = "97e2bf9"
+    static let generatedAt = "2026-06-19T20:13:20Z"
     static let display = "v\(version) (Build \(build))"
     static let detail = "v\(version) (Build \(build), \(gitCommit))"
 }
