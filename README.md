@@ -6,6 +6,7 @@
 
 ## 功能
 
+- 自定义光猫/路由器风格 App 图标
 - macOS 原生 AppKit 图形界面
 - 输入光猫 IP、Telnet 端口、登录用户名和登录密码
 - 自动连接设备并解析超级管理员账号/密码
@@ -45,6 +46,9 @@
 ```text
 Sources/JiulianSuperPasswordTool/main.swift   # macOS AppKit 前端
 Resources/jiulian_backend_helper.py           # 后端 helper，随 App 打包
+Resources/AppIcon.icns                        # App 图标资源
+Assets/AppIcon-1024.png                       # 图标源 PNG
+scripts/generate_icon.py                      # 生成 iconset/icns 图标
 scripts/build_app.sh                          # 构建 .app
 scripts/package_dmg.sh                        # 生成 DMG
 scripts/build_release.sh                      # 一键构建 release

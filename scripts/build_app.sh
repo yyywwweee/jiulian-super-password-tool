@@ -20,6 +20,8 @@ cp "$DERIVED/.build/release/$EXEC_NAME" "$APP/Contents/MacOS/$EXEC_NAME"
 chmod 755 "$APP/Contents/MacOS/$EXEC_NAME"
 cp "$ROOT/Resources/jiulian_backend_helper.py" "$APP/Contents/Resources/jiulian_backend_helper.py"
 chmod 755 "$APP/Contents/Resources/jiulian_backend_helper.py"
+cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+chmod 644 "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -34,6 +36,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>$EXEC_NAME</string>
     <key>CFBundleIdentifier</key>
     <string>$BUNDLE_ID</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
