@@ -11,37 +11,21 @@ ASSETS.mkdir(parents=True, exist_ok=True)
 ICONSET.mkdir(parents=True, exist_ok=True)
 
 S = 1024
-img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+img = Image.new("RGBA", (S, S), (250, 251, 250, 255))
 
-# Soft shadow, similar to the reference app-icon tile.
-shadow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-sd = ImageDraw.Draw(shadow)
-sd.rounded_rectangle((38, 50, 986, 1002), radius=210, fill=(0, 0, 0, 48))
-shadow = shadow.filter(ImageFilter.GaussianBlur(24))
-img.alpha_composite(shadow)
-
-# Large white rounded-square outer tile, close to canvas edge.
-tile = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-td = ImageDraw.Draw(tile)
+# Full white/light-gray background across the whole icon canvas.
+# No transparent outer margin, matching the user's request: whole icon background is white.
+d = ImageDraw.Draw(img)
 for y in range(S):
     t = y / (S - 1)
-    r = int(250 - 12 * t)
-    g = int(251 - 13 * t)
-    b = int(250 - 14 * t)
-    td.line((0, y, S, y), fill=(r, g, b, 255))
-mask = Image.new("L", (S, S), 0)
-md = ImageDraw.Draw(mask)
-# Smaller transparent margin than previous version.
-md.rounded_rectangle((34, 34, 990, 990), radius=218, fill=255)
-img.alpha_composite(Image.composite(tile, Image.new("RGBA", (S, S), (0,0,0,0)), mask))
-
-d = ImageDraw.Draw(img)
-# Very subtle edge; avoid obvious gray ring.
-d.rounded_rectangle((38, 38, 986, 986), radius=214, outline=(224, 229, 232, 42), width=2)
+    r = int(252 - 8 * t)
+    g = int(253 - 9 * t)
+    b = int(252 - 10 * t)
+    d.line((0, y, S, y), fill=(r, g, b, 255))
 
 # Center blue circle. Clean, no outer double ring.
 cx = cy = 512
-R = 260
+R = 330
 circle = Image.new("RGBA", (S, S), (0, 0, 0, 0))
 cd = ImageDraw.Draw(circle)
 for y in range(cy - R, cy + R + 1):
@@ -62,30 +46,30 @@ blue_cut = (32, 168, 231, 255)
 
 # Simplified white modem/router glyph, smaller and cleaner than previous version.
 # Wi-Fi arcs: two clean arcs plus center dot, closer to the compact reference symbol.
-arc_center_y = 452
-for r, width, alpha in [(58, 10, 255), (106, 9, 230)]:
+arc_center_y = 438
+for r, width, alpha in [(72, 12, 255), (132, 11, 230)]:
     bbox = (cx-r, arc_center_y-r, cx+r, arc_center_y+r)
     d.arc(bbox, start=210, end=330, fill=(255, 255, 255, alpha), width=width)
-d.ellipse((cx-11, arc_center_y-11, cx+11, arc_center_y+11), fill=white)
+d.ellipse((cx-14, arc_center_y-14, cx+14, arc_center_y+14), fill=white)
 
 # Modem body: smaller, flatter, and less detailed.
-body = (386, 532, 638, 612)
-d.rounded_rectangle(body, radius=25, fill=white)
+body = (350, 528, 674, 634)
+d.rounded_rectangle(body, radius=32, fill=white)
 # Front blue cutout, only one simple band.
-d.rounded_rectangle((420, 576, 604, 594), radius=9, fill=blue_cut)
+d.rounded_rectangle((390, 590, 634, 614), radius=11, fill=blue_cut)
 # Optical port left.
-d.ellipse((420, 548, 452, 580), fill=blue_cut)
-d.ellipse((431, 559, 441, 569), fill=white)
+d.ellipse((392, 552, 440, 600), fill=blue_cut)
+d.ellipse((407, 567, 425, 585), fill=white)
 # Two tiny LED dots only.
-for x in (520, 560):
-    d.ellipse((x-7, 558-7, x+7, 558+7), fill=blue_cut)
-    d.ellipse((x-3, 558-3, x+3, 558+3), fill=white)
+for x in (520, 570):
+    d.ellipse((x-10, 566-10, x+10, 566+10), fill=blue_cut)
+    d.ellipse((x-4, 566-4, x+4, 566+4), fill=white)
 
 # Two short antennas, simplified and kept inside the blue circle.
-d.line((422, 534, 388, 468), fill=white, width=13)
-d.line((602, 534, 636, 468), fill=white, width=13)
-d.ellipse((382, 462, 394, 474), fill=white)
-d.ellipse((630, 462, 642, 474), fill=white)
+d.line((392, 530, 344, 438), fill=white, width=17)
+d.line((632, 530, 680, 438), fill=white, width=17)
+d.ellipse((336, 430, 352, 446), fill=white)
+d.ellipse((672, 430, 688, 446), fill=white)
 
 img.save(PNG1024)
 
