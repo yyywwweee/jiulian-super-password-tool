@@ -18,9 +18,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$DIST"
 swift build -c release --package-path "$ROOT" --scratch-path "$DERIVED/.build"
 cp "$DERIVED/.build/release/$EXEC_NAME" "$APP/Contents/MacOS/$EXEC_NAME"
 chmod 755 "$APP/Contents/MacOS/$EXEC_NAME"
-cp "$ROOT/Resources/jiulian_backend_helper.py" "$APP/Contents/Resources/jiulian_backend_helper.py"
+cp "$ROOT/shared/backend/jiulian_backend_helper.py" "$APP/Contents/Resources/jiulian_backend_helper.py"
 chmod 755 "$APP/Contents/Resources/jiulian_backend_helper.py"
-cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/platforms/macos/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 chmod 644 "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<PLIST

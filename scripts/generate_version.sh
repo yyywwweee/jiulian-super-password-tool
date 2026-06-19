@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION_FILE="$ROOT/VERSION"
 BUILD_FILE="$ROOT/BUILD_NUMBER"
-OUT_FILE="$ROOT/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift"
+OUT_FILE="$ROOT/platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift"
 
 if [[ ! -f "$VERSION_FILE" ]]; then
   echo "1.0.0" > "$VERSION_FILE"

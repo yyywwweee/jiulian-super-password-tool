@@ -4,12 +4,14 @@
 
 ```text
 .
-├── Sources/JiulianSuperPasswordTool/          # macOS Swift/AppKit 前端，遵循 SwiftPM 默认结构
-├── Resources/                                 # macOS 打包资源；包含 helper 和 .icns
 ├── platforms/
+│   ├── macos/                                # macOS 平台目录
+│   │   ├── Sources/JiulianSuperPasswordTool/  # macOS Swift/AppKit 前端，SwiftPM target path
+│   │   └── Resources/                         # macOS 图标等平台资源
 │   ├── windows/                               # Windows 图形前端源码
 │   │   └── jiulian_windows_tool.py
 │   └── android/                               # Android 版本预留目录
+├── shared/backend/                            # 跨平台复用后端 helper
 ├── Assets/                                    # 共用视觉资产源文件和生成后的图标资产
 ├── scripts/
 │   ├── build_release.sh                       # macOS 一键构建：.app + .dmg + .app.zip
@@ -29,7 +31,7 @@
 ## 设计原则
 
 1. **版本统一**：同一次 Release 的 macOS / Windows / Android 使用同一个 `VERSION` 和 `BUILD_NUMBER`。
-2. **平台隔离**：平台 UI 各自独立；公共协议、后端 helper 和视觉资产尽量复用。
+2. **平台隔离**：平台 UI 各自独立；公共协议、后端 helper 和视觉资产尽量复用；后端 helper 放在 shared/backend。
 3. **产物命名统一**：GitHub Release 附件使用英文 ASCII 文件名，避免中文文件名在 GitHub 上被截断。
 4. **CI 优先**：Windows 产物由 GitHub Actions 的 Windows runner 构建；macOS 产物可本地构建，也可由 macOS runner 构建。
 5. **Android 预留**：当前不实现 Android，但目录和发布命名先固定，避免后续破坏结构。

@@ -14,4 +14,4 @@ BUILD=$((BUILD + 1))
 echo "$BUILD" > "$BUILD_FILE"
 
 "$GEN_SCRIPT"
-git add "$ROOT/VERSION" "$ROOT/BUILD_NUMBER" "$ROOT/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift"
+git add "$ROOT/VERSION" "$ROOT/BUILD_NUMBER" "$ROOT/platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift"

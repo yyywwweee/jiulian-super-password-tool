@@ -64,9 +64,10 @@ def write_debug(title: str, detail: str) -> None:
 def load_backend_module():
     root = resource_root()
     candidates = [
-        root / "Resources" / "jiulian_backend_helper.py",
+        root / "shared" / "backend" / "jiulian_backend_helper.py",
+        root / "Resources" / "jiulian_backend_helper.py",  # compatibility with older bundles
         root / "jiulian_backend_helper.py",
-        pathlib.Path(__file__).resolve().parents[1] / "Resources" / "jiulian_backend_helper.py",
+        pathlib.Path(__file__).resolve().parents[2] / "shared" / "backend" / "jiulian_backend_helper.py",
     ]
     for path in candidates:
         if path.exists():

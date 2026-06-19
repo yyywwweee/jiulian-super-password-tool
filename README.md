@@ -72,11 +72,13 @@ Windows 版在 Windows 环境中构建：
 项目已按多平台发布思路整理：
 
 ```text
-Sources/JiulianSuperPasswordTool/          # macOS Swift/AppKit 前端
-Resources/                                 # macOS 打包资源
-platforms/windows/                         # Windows 图形前端
-platforms/android/                         # Android 预留目录
-Assets/                                    # 共用视觉资产和图标源文件
+platforms/macos/                         # macOS 平台目录
+platforms/macos/Sources/JiulianSuperPasswordTool/   # macOS Swift/AppKit 前端
+platforms/macos/Resources/                # macOS 图标等平台资源
+platforms/windows/                       # Windows 图形前端
+platforms/android/                       # Android 预留目录
+shared/backend/                          # 跨平台复用后端 helper
+Assets/                                  # 共用视觉资产和图标源文件
 scripts/                                   # 各平台构建脚本
 .github/workflows/release-builds.yml       # 多平台 CI 构建和 Release 附件上传
 docs/                                      # 项目结构和发布流程说明
@@ -114,7 +116,7 @@ docs/                                      # 项目结构和发布流程说明
 版本信息会自动生成到：
 
 ```text
-Sources/JiulianSuperPasswordTool/GeneratedVersion.swift
+platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift
 ```
 
 App 界面和运行日志会显示：

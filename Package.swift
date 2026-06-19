@@ -8,6 +8,9 @@ let package = Package(
         .executable(name: "JiulianSuperPasswordTool", targets: ["JiulianSuperPasswordTool"])
     ],
     targets: [
-        .executableTarget(name: "JiulianSuperPasswordTool")
+        .executableTarget(
+            name: "JiulianSuperPasswordTool",
+            path: "platforms/macos/Sources/JiulianSuperPasswordTool"
+        )
     ]
 )

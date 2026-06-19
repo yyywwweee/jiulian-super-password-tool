@@ -33,7 +33,7 @@ python $iconScriptPath
 $name = "JiulianSuperPasswordTool-$version-build$build-win-x64"
 $sep = [IO.Path]::PathSeparator
 $entry = Join-Path $ProjectRoot "platforms\windows\jiulian_windows_tool.py"
-$backendData = "$(Join-Path $ProjectRoot 'Resources\jiulian_backend_helper.py')${sep}Resources"
+$backendData = "$(Join-Path $ProjectRoot 'shared\backend\jiulian_backend_helper.py')${sep}shared/backend"
 $versionData = "$(Join-Path $ProjectRoot 'VERSION')${sep}."
 $buildData = "$(Join-Path $ProjectRoot 'BUILD_NUMBER')${sep}."
 
