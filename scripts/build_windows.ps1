@@ -32,6 +32,11 @@ python $iconScriptPath
 
 $name = "JiulianSuperPasswordTool-$version-build$build-win-x64"
 $sep = [IO.Path]::PathSeparator
+$entry = Join-Path $ProjectRoot "platforms\windows\jiulian_windows_tool.py"
+$backendData = "$(Join-Path $ProjectRoot 'Resources\jiulian_backend_helper.py')${sep}Resources"
+$versionData = "$(Join-Path $ProjectRoot 'VERSION')${sep}."
+$buildData = "$(Join-Path $ProjectRoot 'BUILD_NUMBER')${sep}."
+
 python -m PyInstaller `
   --noconfirm `
   --clean `
@@ -42,10 +47,10 @@ python -m PyInstaller `
   --distpath $dist `
   --workpath $work `
   --specpath $work `
-  --add-data "Resources\jiulian_backend_helper.py${sep}Resources" `
-  --add-data "VERSION${sep}." `
-  --add-data "BUILD_NUMBER${sep}." `
-  platforms\windows\jiulian_windows_tool.py
+  --add-data $backendData `
+  --add-data $versionData `
+  --add-data $buildData `
+  $entry
 
 $exe = Join-Path $dist "$name.exe"
 if (!(Test-Path $exe)) { throw "Build failed: $exe not found" }
