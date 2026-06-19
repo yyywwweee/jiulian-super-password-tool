@@ -214,27 +214,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let title = NSTextField(labelWithString: "\(AppConstants.appName) \(AppVersion.display)"); title.frame = NSRect(x: 28, y: 595, width: 700, height: 34); title.font = .boldSystemFont(ofSize: 28); v.addSubview(title)
         let sub = NSTextField(labelWithString: "本工具只获取超级管理员账号和密码。登录密码明文显示，并会缓存在本机，便于下次自动填入。"); sub.frame = NSRect(x: 30, y: 568, width: 760, height: 22); sub.textColor = .secondaryLabelColor; v.addSubview(sub)
-        let versionLabel = NSTextField(labelWithString: "版本：\(AppVersion.detail)"); versionLabel.frame = NSRect(x: 30, y: 546, width: 760, height: 20); versionLabel.textColor = .tertiaryLabelColor; versionLabel.font = .systemFont(ofSize: 12); v.addSubview(versionLabel)
+        let versionLabel = NSTextField(labelWithString: "版本：\(AppVersion.detail)"); versionLabel.frame = NSRect(x: 30, y: 548, width: 760, height: 20); versionLabel.textColor = .tertiaryLabelColor; versionLabel.font = .systemFont(ofSize: 12); v.addSubview(versionLabel)
 
         let x1: CGFloat = 30, x2: CGFloat = 165, x3: CGFloat = 570
-        var y: CGFloat = 525
+        var y: CGFloat = 510
         for (name, field, h) in [("光猫 IP：", hostField, "例如 192.168.0.1"), ("登录端口：", portField, "默认 23"), ("登录用户名：", userField, "例如 root"), ("登录密码：", passField, "明文显示"), ("保存目录：", outField, "") ] {
             v.addSubview(label(name, x: x1, y: y)); setupField(field, x: x2, y: y, w: name == "保存目录：" ? 500 : 390); v.addSubview(field); if !h.isEmpty { v.addSubview(hint(h, x: x3, y: y)) }; y -= 39
         }
-        chooseButton.frame = NSRect(x: 675, y: 369, width: 78, height: 30); chooseButton.target = self; chooseButton.action = #selector(chooseDir); v.addSubview(chooseButton)
-        cleanBox.frame = NSRect(x: x2, y: 330, width: 300, height: 24); cleanBox.state = cleanBox.state == .off ? .on : cleanBox.state; v.addSubview(cleanBox)
+        chooseButton.frame = NSRect(x: 675, y: 354, width: 78, height: 30); chooseButton.target = self; chooseButton.action = #selector(chooseDir); v.addSubview(chooseButton)
+        cleanBox.frame = NSRect(x: x2, y: 315, width: 300, height: 24); cleanBox.state = cleanBox.state == .off ? .on : cleanBox.state; v.addSubview(cleanBox)
 
-        startButton.frame = NSRect(x: x2, y: 286, width: 160, height: 34); startButton.bezelStyle = .rounded; startButton.target = self; startButton.action = #selector(start); v.addSubview(startButton)
-        clearButton.frame = NSRect(x: 340, y: 286, width: 90, height: 34); clearButton.target = self; clearButton.action = #selector(clearLogs); v.addSubview(clearButton)
-        statusLabel.frame = NSRect(x: 485, y: 286, width: 260, height: 34); statusLabel.font = .boldSystemFont(ofSize: 22); statusLabel.textColor = .systemBlue; v.addSubview(statusLabel)
+        startButton.frame = NSRect(x: x2, y: 271, width: 160, height: 34); startButton.bezelStyle = .rounded; startButton.target = self; startButton.action = #selector(start); v.addSubview(startButton)
+        clearButton.frame = NSRect(x: 340, y: 271, width: 90, height: 34); clearButton.target = self; clearButton.action = #selector(clearLogs); v.addSubview(clearButton)
+        statusLabel.frame = NSRect(x: 485, y: 271, width: 260, height: 34); statusLabel.font = .boldSystemFont(ofSize: 22); statusLabel.textColor = .systemBlue; v.addSubview(statusLabel)
 
-        let box = NSBox(frame: NSRect(x: 30, y: 165, width: 820, height: 105)); box.title = "解密结果"; v.addSubview(box)
-        accountLabel.frame = NSRect(x: 145, y: 232, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 205, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 178, width: 650, height: 22)
-        for (t, yy) in [("超级账号：", 232 as CGFloat), ("超级密码：", 205 as CGFloat), ("保存位置：", 178 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
+        let box = NSBox(frame: NSRect(x: 30, y: 150, width: 820, height: 105)); box.title = "解密结果"; v.addSubview(box)
+        accountLabel.frame = NSRect(x: 145, y: 217, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 190, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 163, width: 650, height: 22)
+        for (t, yy) in [("超级账号：", 217 as CGFloat), ("超级密码：", 190 as CGFloat), ("保存位置：", 163 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
         for l in [accountLabel, passwordLabel, outputLabel] { l.isSelectable = true; v.addSubview(l) }
 
-        let logBox = NSBox(frame: NSRect(x: 30, y: 25, width: 820, height: 128)); logBox.title = "运行日志"; v.addSubview(logBox)
-        let scroll = NSScrollView(frame: NSRect(x: 42, y: 38, width: 796, height: 95)); scroll.hasVerticalScroller = true; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
+        let logBox = NSBox(frame: NSRect(x: 30, y: 20, width: 820, height: 118)); logBox.title = "运行日志"; v.addSubview(logBox)
+        let scroll = NSScrollView(frame: NSRect(x: 42, y: 33, width: 796, height: 85)); scroll.hasVerticalScroller = true; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
 
         appendLog("当前软件：\(AppConstants.appName) \(AppVersion.detail)")
         appendLog("如果失败，日志会用红色显示原因；修正信息后可以直接重试。")
