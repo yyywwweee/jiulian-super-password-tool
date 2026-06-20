@@ -22,6 +22,7 @@ $name = "JiulianSuperPasswordTool-$version-build$build-win-x64"
 $sep = [IO.Path]::PathSeparator
 $entry = Join-Path $ProjectRoot "platforms\windows\jiulian_windows_tool.py"
 $backendData = "$(Join-Path $ProjectRoot 'shared\backend\jiulian_backend_helper.py')${sep}shared/backend"
+$backendVendorData = "$(Join-Path $ProjectRoot 'shared\backend\vendor')${sep}shared/backend/vendor"
 $versionData = "$(Join-Path $ProjectRoot 'VERSION')${sep}."
 $buildData = "$(Join-Path $ProjectRoot 'BUILD_NUMBER')${sep}."
 
@@ -36,6 +37,7 @@ python -m PyInstaller `
   --workpath $work `
   --specpath $work `
   --add-data $backendData `
+  --add-data $backendVendorData `
   --add-data $versionData `
   --add-data $buildData `
   $entry

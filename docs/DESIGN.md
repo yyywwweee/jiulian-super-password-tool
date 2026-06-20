@@ -470,7 +470,7 @@ Android 版建议继续沿用“UI 独立、核心协议复用”的原则：
 
 1. Python `telnetlib` 兼容性风险
 
-   后端已内置最小 Telnet 客户端，不再依赖 Python 标准库 `telnetlib`。这样可避免 Python 3.13+ 移除 `telnetlib` 后 Windows/macOS 后端无法加载。
+   后端已 vendored CPython 3.12 的 `telnetlib.py` 兼容层，不再依赖运行环境自带的 Python 标准库 `telnetlib`。这样可避免 Python 3.13+ 移除 `telnetlib` 后 Windows/macOS 后端无法加载，同时保持接近原标准库实现的 Telnet 处理能力。
 
 2. XML 解析较简单
 
@@ -511,4 +511,4 @@ python -m py_compile shared/backend/jiulian_backend_helper.py platforms/windows/
 
 语法检查通过。
 
-同时确认后端源码中不再存在 `import telnetlib` / `telnetlib.Telnet` 依赖，并通过本地 Telnet mock server 完成登录、命令执行、base64 回传和账号密码解析的集成测试。
+同时确认后端源码不再依赖运行环境自带 `telnetlib`，并通过本地 Telnet mock server 完成登录、命令执行、大段 base64 回传和账号密码解析的集成测试。
