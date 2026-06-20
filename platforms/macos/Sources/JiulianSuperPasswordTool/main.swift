@@ -135,14 +135,14 @@ enum Runner {
                 let chunk = handle.availableData
                 if !chunk.isEmpty {
                     buffer.append(chunk)
-                    processLines(&buffer, onLog: onLog, final: &final)
+                    processLines(&buffer, onLog: onLog, onCreds: onCreds, final: &final)
                 } else {
                     Thread.sleep(forTimeInterval: 0.05)
                 }
             }
             let rest = handle.readDataToEndOfFile()
             if !rest.isEmpty { buffer.append(rest) }
-            processLines(&buffer, flush: true, onLog: onLog, final: &final)
+            processLines(&buffer, flush: true, onLog: onLog, onCreds: onCreds, final: &final)
 
             let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
             if !errData.isEmpty {
