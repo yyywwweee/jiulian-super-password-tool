@@ -33,7 +33,20 @@ if command -v xattr >/dev/null 2>&1; then
   xattr -cr "$LOCAL_STAGE" || true
 fi
 hdiutil create -volname "$APP_NAME $VERSION build$BUILD" -srcfolder "$LOCAL_STAGE" -ov -format UDZO "$LOCAL_DMG"
-hdiutil verify "$LOCAL_DMG"
+
+# GitHub macOS runners can briefly report a newly created image as busy.
+# Retry verification instead of failing the release build on a transient race.
+for attempt in 1 2 3 4 5; do
+  if hdiutil verify "$LOCAL_DMG"; then
+    break
+  fi
+  if [[ "$attempt" == "5" ]]; then
+    echo "hdiutil verify failed after $attempt attempts: $LOCAL_DMG" >&2
+    exit 1
+  fi
+  sleep 2
+done
+
 cp "$LOCAL_DMG" "$DMG"
 rm -rf "$LOCAL_STAGE"
 

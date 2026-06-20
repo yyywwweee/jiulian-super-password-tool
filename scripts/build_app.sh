@@ -7,19 +7,20 @@ EXEC_NAME="JiulianSuperPasswordTool"
 BUNDLE_ID="local.jiulian.superpassword"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 BUILD="$(tr -d '[:space:]' < "$ROOT/BUILD_NUMBER")"
-DERIVED="$ROOT/derived"
 DIST="$ROOT/dist"
 
-# Code signing on SMB/network/external volumes can fail with
+# Build intermediates and code signing on SMB/network/external volumes can fail
+# or leave undeletable temporary trees. Keep transient build state local.
 # "resource fork, Finder information, or similar detritus not allowed".
 # Build/sign/package the .app on the local filesystem, then copy artifacts back.
 LOCAL_BUILD_ROOT="${TMPDIR:-/tmp}/jiulian-super-password-tool-build"
+DERIVED="$LOCAL_BUILD_ROOT/derived"
 LOCAL_APP="$LOCAL_BUILD_ROOT/$APP_NAME.app"
 LOCAL_ZIP="$LOCAL_BUILD_ROOT/$APP_NAME-$VERSION.app.zip"
 APP="$DIST/$APP_NAME.app"
 ZIP="$DIST/$APP_NAME-$VERSION.app.zip"
 
-rm -rf "$DERIVED" "$LOCAL_BUILD_ROOT" "$APP" "$ZIP"
+rm -rf "$LOCAL_BUILD_ROOT" "$APP" "$ZIP"
 mkdir -p "$LOCAL_APP/Contents/MacOS" "$LOCAL_APP/Contents/Resources" "$DIST"
 
 "$ROOT/scripts/generate_version.sh"
