@@ -4,8 +4,9 @@ import Foundation
 enum AppConstants {
     static let appName = "九联光猫获取超级密码工具"
     static let appSupportDir: URL = {
+        let id = Bundle.main.bundleIdentifier ?? "com.jiulian.superpassword-tool"
         let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/local.jiulian.superpassword")
+            .appendingPathComponent("Library/Application Support/\(id)")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()
@@ -82,8 +83,7 @@ func extractValue(_ text: String, _ name: String) -> String {
 }
 
 func writeDebug(_ title: String, _ detail: String) {
-    let dir = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/local.jiulian.superpassword/Logs")
+    let dir = AppConstants.appSupportDir.appendingPathComponent("Logs")
     try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     let url = dir.appendingPathComponent("native_debug.log")
     let line = "\n[\(ISO8601DateFormatter().string(from: Date()))] \(title)\n\(detail)\n"
