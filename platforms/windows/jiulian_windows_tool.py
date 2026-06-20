@@ -277,6 +277,8 @@ class App(tk.Tk):
                 if obj.get("type") == "log":
                     level = str(obj.get("level", "info"))
                     self.log_queue.put(("log", f"[{obj.get('time', time.strftime('%H:%M:%S'))}] {obj.get('message', '')}", level))
+                elif obj.get("type") == "credentials":
+                    self.log_queue.put(("credentials", obj))
                 elif obj.get("type") == "result":
                     self.log_queue.put(("result", obj))
 
@@ -299,6 +301,10 @@ class App(tk.Tk):
                 if kind == "log":
                     _, text, level = item
                     self._append_log(str(text), str(level))
+                elif kind == "credentials":
+                    _, creds = item
+                    self.account_var.set(str(creds.get("super_account", "-")))
+                    self.super_password_var.set(str(creds.get("super_password", "-")))
                 elif kind == "result":
                     _, result = item
                     if isinstance(result, dict):

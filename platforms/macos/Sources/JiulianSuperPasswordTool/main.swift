@@ -99,7 +99,7 @@ enum Runner {
         return RunResult(ok: false, logs: logs)
     }
 
-    static func runStream(host: String, port: String, user: String, password: String, outputDir: String, cleanTmp: Bool, onLog: @escaping @Sendable (String, NSColor) -> Void) -> RunResult {
+    static func runStream(host: String, port: String, user: String, password: String, outputDir: String, cleanTmp: Bool, onLog: @escaping @Sendable (String, NSColor) -> Void, onCreds: @escaping @Sendable (String, String) -> Void = { _,_ in }) -> RunResult {
         var final = RunResult(ok: false, logs: [])
         do {
             guard let helper = Bundle.main.path(forResource: "jiulian_backend_helper", ofType: "py") else {
@@ -158,23 +158,23 @@ enum Runner {
         }
     }
 
-    static func processLines(_ buffer: inout Data, flush: Bool = false, onLog: @escaping @Sendable (String, NSColor) -> Void, final: inout RunResult) {
+    static func processLines(_ buffer: inout Data, flush: Bool = false, onLog: @escaping @Sendable (String, NSColor) -> Void, onCreds: @escaping @Sendable (String, String) -> Void, final: inout RunResult) {
         while true {
             if let idx = buffer.firstIndex(of: 10) { // newline
                 let lineData = buffer[..<idx]
                 buffer.removeSubrange(...idx)
-                handleLine(Data(lineData), onLog: onLog, final: &final)
+                handleLine(Data(lineData), onLog: onLog, onCreds: onCreds, final: &final)
             } else {
                 break
             }
         }
         if flush && !buffer.isEmpty {
-            handleLine(buffer, onLog: onLog, final: &final)
+            handleLine(buffer, onLog: onLog, onCreds: onCreds, final: &final)
             buffer.removeAll()
         }
     }
 
-    static func handleLine(_ data: Data, onLog: @escaping @Sendable (String, NSColor) -> Void, final: inout RunResult) {
+    static func handleLine(_ data: Data, onLog: @escaping @Sendable (String, NSColor) -> Void, onCreds: @escaping @Sendable (String, String) -> Void, final: inout RunResult) {
         guard let obj = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
             let raw = String(data: data, encoding: .utf8) ?? ""
             if !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { writeDebug("helper non-json line", raw) }
@@ -187,6 +187,12 @@ enum Runner {
             let level = obj["level"] as? String ?? "info"
             let color: NSColor = level == "error" ? .systemRed : (level == "success" ? .systemGreen : .labelColor)
             onLog("[\(time)] \(msg)", color)
+        } else if type == "credentials" {
+            let account = obj["super_account"] as? String ?? ""
+            let password = obj["super_password"] as? String ?? ""
+            final.superAccount = account
+            final.superPassword = password
+            onCreds(account, password)
         } else if type == "result" {
             final.ok = (obj["ok"] as? Bool) == true
             final.superAccount = obj["super_account"] as? String ?? "-"
@@ -299,6 +305,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .userInitiated).async {
             let r = Runner.runStream(host: params.0, port: params.1, user: params.2, password: params.3, outputDir: params.4, cleanTmp: params.5, onLog: { text, color in
                 DispatchQueue.main.async { self.appendLog(text, color: color) }
+            }, onCreds: { account, password in
+                DispatchQueue.main.async {
+                    self.accountLabel.stringValue = account
+                    self.passwordLabel.stringValue = password
+                }
             })
             DispatchQueue.main.async {
                 self.startButton.isEnabled = true

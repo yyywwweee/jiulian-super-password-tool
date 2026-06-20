@@ -332,9 +332,8 @@ def run(params):
         step_start = time.perf_counter()
         log(logs, "步骤 4/5：正在提取必要信息并回传…")
 
-        # 只回传 3 个 Dir 块，大幅减少数据量，避免 Telnet 阻塞/掉线：
+        # 只回传 2 个 Dir 块，大幅减少数据量，避免 Telnet 阻塞/掉线：
         #   - aucTeleAccountPassword 所在的 Dir
-        #   - aucTelnetUsername 所在的 Dir
         #   - DEVINFO_TAB 块
         filtered_tmp = remote_tmp + ".f"
         # 用 awk 按嵌套深度提取 3 个目标 Dir 块。
@@ -345,7 +344,7 @@ def run(params):
             '  depth = depth + 1\n'
             '  bufs[depth] = $0 "\\n"\n'
             '  keeps[depth] = 0\n'
-            '  if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1\n'
+            '  if ($0 ~ /aucTeleAccountPassword|DEVINFO_TAB/) keeps[depth] = 1\n'
             '  next\n'
             '}\n'
             '/<\\/Dir>/ {\n'
@@ -357,7 +356,7 @@ def run(params):
             '{\n'
             '  if (depth > 0) {\n'
             '    bufs[depth] = bufs[depth] $0 "\\n"\n'
-            '    if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1\n'
+            '    if ($0 ~ /aucTeleAccountPassword|DEVINFO_TAB/) keeps[depth] = 1\n'
             '  }\n'
             '}\n'
         )
@@ -394,6 +393,8 @@ def run(params):
         super_password = parse_value(xml_text, "aucTeleAccountPassword")
         if not super_account and not super_password:
             raise RuntimeError("未找到超级管理员账号/密码。")
+
+        emit({"type": "credentials", "super_account": super_account or "", "super_password": super_password or ""})
 
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_host = re.sub(r"[^0-9A-Za-z_.-]", "_", host)
