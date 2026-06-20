@@ -340,26 +340,26 @@ def run(params):
         # 用 awk 按嵌套深度提取 3 个目标 Dir 块。
         # 兼容 busybox awk：显式赋值、$0 ~ /re/ 语法、BEGIN 初始化 depth。
         awk_script = (
-            'BEGIN { depth = 0 }'
-            '/<Dir[ >]/ {'
-            'depth = depth + 1'
-            'bufs[depth] = $0 "\\n"'
-            'keeps[depth] = 0'
-            'if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1'
-            'next'
-            '}'
-            '/<\\/Dir>/ {'
-            'bufs[depth] = bufs[depth] $0 "\\n"'
-            'if (keeps[depth] == 1) printf "%s", bufs[depth]'
-            'depth = depth - 1'
-            'next'
-            '}'
-            '{'
-            'if (depth > 0) {'
-            'bufs[depth] = bufs[depth] $0 "\\n"'
-            'if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1'
-            '}'
-            '}'
+            'BEGIN { depth = 0 }\n'
+            '/<Dir[ >]/ {\n'
+            '  depth = depth + 1\n'
+            '  bufs[depth] = $0 "\\n"\n'
+            '  keeps[depth] = 0\n'
+            '  if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1\n'
+            '  next\n'
+            '}\n'
+            '/<\\/Dir>/ {\n'
+            '  bufs[depth] = bufs[depth] $0 "\\n"\n'
+            '  if (keeps[depth] == 1) printf "%s", bufs[depth]\n'
+            '  depth = depth - 1\n'
+            '  next\n'
+            '}\n'
+            '{\n'
+            '  if (depth > 0) {\n'
+            '    bufs[depth] = bufs[depth] $0 "\\n"\n'
+            '    if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1\n'
+            '  }\n'
+            '}\n'
         )
         filter_cmd = (
             f"awk '{awk_script}' {remote_tmp}"
@@ -399,7 +399,10 @@ def run(params):
         safe_host = re.sub(r"[^0-9A-Za-z_.-]", "_", host)
         out_file = output_dir / f"jiulian_super_password_{safe_host}_{ts}.xml"
         out_file.write_bytes(xml_bytes)
-        log(logs, f"步骤 4/5：结果已保存，仅回传必要 Dir 块（接收 {human_bytes(len(xml_bytes))}，用时 {fetch_elapsed}）。")
+        if use_filtered:
+            log(logs, f"步骤 4/5：结果已保存，仅回传必要 Dir 块（接收 {human_bytes(len(xml_bytes))}，用时 {fetch_elapsed}）。")
+        else:
+            log(logs, f"步骤 4/5：结果已保存，接收 {human_bytes(len(xml_bytes))}（用时 {fetch_elapsed}）。")
 
         if clean_tmp:
             if cleanup_current_remote_tmp(tn, logs, remote_tmp, wait=0.5, timeout=4.0):
