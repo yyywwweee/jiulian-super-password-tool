@@ -198,16 +198,26 @@ def run(params):
     remote_tmp = f"/tmp/oclg_{int(time.time())}_{os.getpid()}.dec"
     try:
         log(logs, "步骤 1/5：正在连接光猫…")
-        try:
-            tn = Telnet(host, port, timeout=6)
+        last_connect_error = None
+        for attempt in range(1, 4):
             try:
-                tn.get_socket().settimeout(0.5)
-            except Exception:
-                pass
-        except Exception as e:
-            raise RuntimeError(f"连接光猫失败：{e}")
+                tn = Telnet(host, port, timeout=8)
+                try:
+                    tn.get_socket().settimeout(0.5)
+                except Exception:
+                    pass
+                break
+            except Exception as e:
+                last_connect_error = e
+                if attempt < 3:
+                    log(logs, f"连接暂时无响应，正在重试 {attempt}/2…")
+                    time.sleep(1.5)
+                else:
+                    raise RuntimeError(f"连接光猫失败：{e}")
+        if tn is None:
+            raise RuntimeError(f"连接光猫失败：{last_connect_error}")
 
-        banner = tn.read_until(b"login:", timeout=5)
+        banner = tn.read_until(b"login:", timeout=6)
         if b"login:" not in banner:
             raise RuntimeError("连接成功但未进入登录流程，请确认光猫登录服务正常。")
 
