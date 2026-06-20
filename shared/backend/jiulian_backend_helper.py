@@ -397,7 +397,44 @@ def run(params):
         if not use_filtered:
             run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
 
-        xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
+        xml_bytes = None
+        for retry in range(1, 4):
+            try:
+                xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
+                break
+            except Exception as fetch_err:
+                log(logs, f"步骤 4/5：回传失败：{fetch_err}")
+                if retry >= 3:
+                    break
+                wait_sec = retry * 5
+                log(logs, f"步骤 4/5：等待 {wait_sec} 秒后重连并重试（第 {retry}/3 次）…")
+                try:
+                    tn.close()
+                except Exception:
+                    pass
+                time.sleep(wait_sec)
+                try:
+                    tn = Telnet(host, port, timeout=8)
+                    tn.read_until(b"login:", timeout=6)
+                    tn.write(user.encode() + b"\n")
+                    tn.read_until(b"Password:", timeout=5)
+                    tn.write(password.encode() + b"\n")
+                    time.sleep(0.8)
+                    read_some(tn, quiet=2.0, hard=4.0)
+                    tn.write(b"stty -echo 2>/dev/null\n")
+                    time.sleep(0.2)
+                    read_some(tn, quiet=0.5, hard=1.5)
+                    tn.write(b"export PS1=''\n")
+                    time.sleep(0.2)
+                    read_some(tn, quiet=0.5, hard=1.5)
+                except Exception as reconnect_err:
+                    log(logs, f"步骤 4/5：重连失败：{reconnect_err}")
+                    continue
+
+        if xml_bytes is None:
+            log(logs, f"取回信息失败，开始清理临时文件 {remote_tmp}", "error")
+            raise RuntimeError("取回结果失败：3 次重试均未成功，请重试。")
+
         run_cmd(tn, f"rm -f {filtered_tmp}", wait=0.2, timeout=3.0)
 
         fetch_elapsed = elapsed_since(step_start)
