@@ -3,7 +3,13 @@ import Foundation
 
 enum AppConstants {
     static let appName = "九联光猫获取超级密码工具"
-    static let cacheURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".jiulian_super_password_native_cache.json")
+    static let appSupportDir: URL = {
+        let dir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/local.jiulian.superpassword")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }()
+    static let cacheURL = appSupportDir.appendingPathComponent("cache.json")
 }
 
 
@@ -76,7 +82,10 @@ func extractValue(_ text: String, _ name: String) -> String {
 }
 
 func writeDebug(_ title: String, _ detail: String) {
-    let url = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("jiulian_super_password_native_debug.log")
+    let dir = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Application Support/local.jiulian.superpassword/Logs")
+    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let url = dir.appendingPathComponent("native_debug.log")
     let line = "\n[\(ISO8601DateFormatter().string(from: Date()))] \(title)\n\(detail)\n"
     if let data = line.data(using: .utf8) {
         if FileManager.default.fileExists(atPath: url.path), let h = try? FileHandle(forWritingTo: url) {

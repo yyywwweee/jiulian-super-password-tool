@@ -17,7 +17,8 @@ from datetime import datetime
 
 REMOTE_ENCRYPTED_FILE = "/config/workb/backup_lastgood.xml"
 REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
-DEBUG_LOG_FILE = pathlib.Path.home() / "jiulian_super_password_backend_debug.log"
+DEBUG_LOG_DIR = pathlib.Path.home() / "Library/Application Support/local.jiulian.superpassword/Logs"
+DEBUG_LOG_FILE = DEBUG_LOG_DIR / "backend_debug.log"
 ANSI_RE = re.compile(rb"\x1b\[[0-9;]*[A-Za-z]")
 STREAM = False
 
@@ -43,6 +44,7 @@ def emit(obj):
 
 def debug(title, detail):
     try:
+        DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
         with DEBUG_LOG_FILE.open("a", encoding="utf-8") as f:
             f.write(f"\n[{datetime.now().isoformat(timespec='seconds')}] {title}\n")
             f.write(str(detail))
