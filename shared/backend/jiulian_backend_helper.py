@@ -491,10 +491,11 @@ def main():
             print(json.dumps(result, ensure_ascii=False))
     except Exception as e:
         debug("backend failed", traceback.format_exc())
-        logs = []
-        log(logs, f"FAIL: {e}", "error")
-        log(logs, "请检查光猫 IP、登录用户名/密码、网络连接，确认设备在线后重试。", "error")
-        result = {"ok": False, "logs": logs, "error": str(e)}
+        # run() 通过 emit() 已经把步骤日志发到前端了（含 finally 块的清理提示），
+        # 这里只补一条最终错误，不要 new logs 覆盖已有的。
+        emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": f"FAIL: {e}", "level": "error"})
+        emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": "请检查光猫 IP、登录用户名/密码、网络连接，确认设备在线后重试。", "level": "error"})
+        result = {"ok": False, "error": str(e)}
         if STREAM:
             emit({"type": "result", "ok": False, "error": str(e)})
         else:
