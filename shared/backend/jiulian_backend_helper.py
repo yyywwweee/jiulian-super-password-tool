@@ -61,6 +61,19 @@ def log(logs, msg, level="info"):
     emit({"type": "log", **item})
 
 
+def elapsed_since(start):
+    return f"{time.perf_counter() - start:.1f} 秒"
+
+
+def human_bytes(size):
+    size = int(size or 0)
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        return f"{size / 1024:.1f} KB"
+    return f"{size / 1024 / 1024:.1f} MB"
+
+
 def strip_ansi(data):
     return ANSI_RE.sub(b"", data)
 
@@ -143,10 +156,13 @@ def fetch_remote_file_base64(tn, remote_path):
     tn.write(f"echo {start}; base64 {remote_path}; echo {end}\n".encode())
     cap = read_until_bytes(tn, end.encode(), hard=120.0, idle_after_data=8.0)
     if end.encode() not in cap:
+        clean = strip_ansi(cap)
         debug("fetch timeout", {
             "remote_path": remote_path,
             "received_bytes": len(cap),
-            "tail": strip_ansi(cap)[-4000:].decode("latin1", errors="replace"),
+            "has_begin_marker": start.encode() in clean,
+            "has_end_marker": end.encode() in clean,
+            "base64_like_line_count": sum(1 for line in clean.splitlines() if re.fullmatch(rb"[A-Za-z0-9+/=]{8,}", line.strip())),
         })
         raise RuntimeError("传回结果超时，请重试。")
 
@@ -163,7 +179,11 @@ def fetch_remote_file_base64(tn, remote_path):
         if collecting and re.fullmatch(rb"[A-Za-z0-9+/=]{8,}", s):
             b64_lines.append(s)
     if not b64_lines:
-        debug("fetch empty", cap[:4000].decode("latin1", errors="replace"))
+        debug("fetch empty", {
+            "received_bytes": len(cap),
+            "has_begin_marker": start.encode() in cap,
+            "has_end_marker": end.encode() in cap,
+        })
         raise RuntimeError("没有收到有效结果数据，请重试。")
     try:
         return base64.b64decode(b"".join(b64_lines))
@@ -179,6 +199,7 @@ def parse_value(xml_text, name):
 
 def run(params):
     logs = []
+    total_start = time.perf_counter()
     host = str(params.get("host", "")).strip()
     port = int(str(params.get("port", "23")).strip() or "23")
     user = str(params.get("user", "")).strip()
@@ -197,6 +218,7 @@ def run(params):
     tn = None
     remote_tmp = f"/tmp/oclg_{int(time.time())}_{os.getpid()}.dec"
     try:
+        step_start = time.perf_counter()
         log(logs, "步骤 1/5：正在连接光猫…")
         last_connect_error = None
         for attempt in range(1, 4):
@@ -232,7 +254,7 @@ def run(params):
         # 注意：成功后可能输出 "login: can't change directory to '/root'"，不能把 login: 当失败
         if b"incorrect" in out.lower():
             raise RuntimeError("登录失败：用户名或密码不正确。")
-        log(logs, "步骤 1/5：登录成功。")
+        log(logs, f"步骤 1/5：登录成功（用时 {elapsed_since(step_start)}）。")
 
         try:
             tn.write(b"stty -echo 2>/dev/null\n")
@@ -244,11 +266,14 @@ def run(params):
         except Exception:
             pass
 
+        step_start = time.perf_counter()
         log(logs, "步骤 2/5：正在检查设备配置…")
         text = run_cmd(tn, f"[ -f {REMOTE_ENCRYPTED_FILE} ] && echo EXISTS && wc -c {REMOTE_ENCRYPTED_FILE} || echo MISSING", wait=0.5, timeout=4.0)
         if "EXISTS" not in text:
             raise RuntimeError("未找到配置文件，请确认设备型号/固件支持。")
+        log(logs, f"步骤 2/5：配置文件检查完成（用时 {elapsed_since(step_start)}）。")
 
+        step_start = time.perf_counter()
         log(logs, "步骤 3/5：正在解析超级密码…")
         cmd = (
             f"rm -f {remote_tmp}; "
@@ -264,9 +289,12 @@ def run(params):
         if "__DEC_OK__" not in text:
             debug("decrypt missing output", text)
             raise RuntimeError("解析失败：设备没有生成结果。")
+        log(logs, f"步骤 3/5：解析完成（用时 {elapsed_since(step_start)}）。")
 
-        log(logs, "步骤 4/5：正在保存结果到电脑…")
+        step_start = time.perf_counter()
+        log(logs, "步骤 4/5：正在接收并保存结果到电脑…")
         xml_bytes = fetch_remote_file_base64(tn, remote_tmp)
+        fetch_elapsed = elapsed_since(step_start)
         xml_text = xml_bytes.decode("utf-8", errors="replace")
         super_account = parse_value(xml_text, "aucTeleAccountName")
         super_password = parse_value(xml_text, "aucTeleAccountPassword")
@@ -277,16 +305,18 @@ def run(params):
         safe_host = re.sub(r"[^0-9A-Za-z_.-]", "_", host)
         out_file = output_dir / f"jiulian_super_password_{safe_host}_{ts}.xml"
         out_file.write_bytes(xml_bytes)
+        log(logs, f"步骤 4/5：结果已保存，接收 {human_bytes(len(xml_bytes))}（用时 {fetch_elapsed}）。")
 
         if clean_tmp:
+            step_start = time.perf_counter()
             log(logs, "步骤 5/5：正在清理本次临时数据…")
             if is_our_tmp(remote_tmp):
                 run_cmd(tn, f"rm -f {remote_tmp}; [ ! -f {remote_tmp} ] && echo CLEANED", wait=0.5, timeout=4.0)
-            log(logs, "已清理本次临时数据。")
+            log(logs, f"步骤 5/5：已清理本次临时数据（用时 {elapsed_since(step_start)}）。")
         else:
-            log(logs, "已按设置保留本次临时数据。")
+            log(logs, "步骤 5/5：已按设置保留本次临时数据。")
 
-        log(logs, "完成：已成功获取超级密码。", "success")
+        log(logs, f"完成：已成功获取超级密码（总用时 {elapsed_since(total_start)}）。", "success")
         return {"ok": True, "logs": logs, "super_account": super_account or "未找到", "super_password": super_password or "未找到", "output_file": str(out_file)}
     finally:
         if tn is not None:
