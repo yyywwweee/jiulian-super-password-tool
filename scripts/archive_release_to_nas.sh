@@ -10,6 +10,13 @@ DIST="$ROOT/dist"
 DMG="$DIST/$APP_NAME-$VERSION-build$BUILD.dmg"
 ZIP="$DIST/$APP_NAME-$VERSION.app.zip"
 
+# NAS archiving is intentionally local-only. GitHub Actions builds publish their
+# own workflow artifacts and must not try to touch a user-specific NAS path.
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+  echo "Release archive skipped: running in GitHub Actions."
+  exit 0
+fi
+
 # The archive target is optional: local builds must still succeed when the NAS
 # disk is not mounted.
 NAS_PARENT="$(dirname "$NAS_ROOT")"

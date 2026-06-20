@@ -101,4 +101,4 @@ JiulianSuperPasswordTool-<version>-build<build>-android-arm64.apk
 JIULIAN_RELEASE_ARCHIVE_ROOT=/path/to/archive ./scripts/build_release.sh
 ```
 
-如果 NAS 未挂载，归档步骤会跳过，不影响本地构建成功。
+如果 NAS 未挂载，归档步骤会跳过，不影响本地构建成功。GitHub Actions 环境会明确跳过该 NAS 归档步骤。
