@@ -433,7 +433,7 @@ def run(params):
 
         if xml_bytes is None:
             log(logs, f"取回信息失败，开始清理临时文件 {remote_tmp}", "error")
-            raise RuntimeError("取回结果失败：3 次重试均未成功，请重试。")
+            raise RuntimeError("取回结果失败：3 次重试均未成功。")
 
         run_cmd(tn, f"rm -f {filtered_tmp}", wait=0.2, timeout=3.0)
 
@@ -538,6 +538,7 @@ def main():
         # run() 通过 emit() 已经把步骤日志发到前端了（含 finally 块的清理提示），
         # 这里只补一条最终错误，不要 new logs 覆盖已有的。
         emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": f"FAIL: {e}", "level": "error"})
+        emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": "请检查光猫 IP、登录用户名/密码、网络连接，确认设备在线后重试。", "level": "error"})
         result = {"ok": False, "error": str(e)}
         result = {"ok": False, "error": str(e)}
         if STREAM:
