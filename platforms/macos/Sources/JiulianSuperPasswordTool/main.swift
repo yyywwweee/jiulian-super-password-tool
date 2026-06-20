@@ -279,9 +279,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         clearButton.frame = NSRect(x: 340, y: 271, width: 90, height: 34); clearButton.target = self; clearButton.action = #selector(clearLogs); v.addSubview(clearButton)
         statusLabel.frame = NSRect(x: 485, y: 271, width: 260, height: 34); statusLabel.font = .boldSystemFont(ofSize: 22); statusLabel.textColor = .systemBlue; v.addSubview(statusLabel)
 
-        let box = NSBox(frame: NSRect(x: 30, y: 185, width: 820, height: 75)); box.title = "解密结果"; v.addSubview(box)
-        accountLabel.frame = NSRect(x: 145, y: 248, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 223, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 198, width: 650, height: 22)
-        for (t, yy) in [("超级账号：", 248 as CGFloat), ("超级密码：", 223 as CGFloat), ("保存位置：", 198 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
+        let box = NSBox(frame: NSRect(x: 30, y: 185, width: 820, height: 90)); box.title = "解密结果"; v.addSubview(box)
+        accountLabel.frame = NSRect(x: 145, y: 252, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 227, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 202, width: 650, height: 22)
+        for (t, yy) in [("超级账号：", 252 as CGFloat), ("超级密码：", 227 as CGFloat), ("保存位置：", 202 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
         for l in [accountLabel, passwordLabel, outputLabel] { l.isSelectable = true; v.addSubview(l) }
 
         let logBox = NSBox(frame: NSRect(x: 30, y: 20, width: 820, height: 155)); logBox.title = "运行日志"; v.addSubview(logBox)
