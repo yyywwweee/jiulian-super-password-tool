@@ -129,7 +129,7 @@ def cleanup_current_remote_tmp(tn, logs, remote_tmp, wait=0.2, timeout=3.0, fina
         if final:
             log(logs, f"步骤 5/5：{msg}，请手动登录光猫 /tmp 目录删除本次临时文件：{remote_tmp}", "error")
         else:
-            log(logs, f"步骤 5/5：{msg}，将重连重试。")
+            log(logs, f"步骤 5/5：{msg}，将重连重试。", "error")
     if tn is None:
         log(logs, "步骤 5/5：未连接光猫，未生成本次临时数据，无需清理。")
         return False
@@ -403,7 +403,7 @@ def run(params):
                 xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
                 break
             except Exception as fetch_err:
-                log(logs, f"步骤 4/5：回传失败：{fetch_err}")
+                log(logs, f"步骤 4/5：回传失败：{fetch_err}", "error")
                 if retry >= 3:
                     break
                 wait_sec = retry * 5
@@ -428,7 +428,7 @@ def run(params):
                     time.sleep(0.2)
                     read_some(tn, quiet=0.5, hard=1.5)
                 except Exception as reconnect_err:
-                    log(logs, f"步骤 4/5：重连失败：{reconnect_err}")
+                    log(logs, f"步骤 4/5：重连失败：{reconnect_err}", "error")
                     continue
 
         if xml_bytes is None:
@@ -504,7 +504,7 @@ def run(params):
                                     if reconnect_ok:
                                         break
                                 except Exception as reconnect_err:
-                                    log(logs, f"步骤 5/5：重连失败：{reconnect_err}")
+                                    log(logs, f"步骤 5/5：重连失败：{reconnect_err}", "error")
                                     if tn2:
                                         try:
                                             tn2.close()
