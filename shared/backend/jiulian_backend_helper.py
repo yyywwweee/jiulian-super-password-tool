@@ -127,7 +127,7 @@ def cleanup_current_remote_tmp(tn, logs, remote_tmp, wait=0.2, timeout=3.0):
         debug("skip cleanup unsafe tmp path", {"remote_tmp": remote_tmp})
         return False
 
-    log(logs, "步骤 5/5：正在检查并清理本次临时数据…")
+    log(logs, f"步骤 5/5：正在清理临时文件 {remote_tmp} …")
     try:
         text = run_cmd(
             tn,
@@ -144,10 +144,10 @@ def cleanup_current_remote_tmp(tn, logs, remote_tmp, wait=0.2, timeout=3.0):
         return False
 
     if "__OC_CLEANED__" in text:
-        log(logs, "步骤 5/5：已清理本次临时数据。")
+        log(logs, f"步骤 5/5：已清理临时文件 {remote_tmp}。")
         return True
     if "__OC_NO_TMP__" in text:
-        log(logs, "步骤 5/5：未发现本次临时数据，无需清理。")
+        log(logs, f"步骤 5/5：临时文件 {remote_tmp} 未生成，无需清理。")
         return True
 
     debug("cleanup current remote tmp did not confirm", {"remote_tmp": remote_tmp, "tail": text[-2000:]})
