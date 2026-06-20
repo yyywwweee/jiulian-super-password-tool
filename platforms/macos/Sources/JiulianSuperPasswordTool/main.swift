@@ -279,13 +279,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         clearButton.frame = NSRect(x: 340, y: 271, width: 90, height: 34); clearButton.target = self; clearButton.action = #selector(clearLogs); v.addSubview(clearButton)
         statusLabel.frame = NSRect(x: 485, y: 271, width: 260, height: 34); statusLabel.font = .boldSystemFont(ofSize: 22); statusLabel.textColor = .systemBlue; v.addSubview(statusLabel)
 
-        let box = NSBox(frame: NSRect(x: 30, y: 150, width: 820, height: 105)); box.title = "解密结果"; v.addSubview(box)
-        accountLabel.frame = NSRect(x: 145, y: 217, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 190, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 163, width: 650, height: 22)
-        for (t, yy) in [("超级账号：", 217 as CGFloat), ("超级密码：", 190 as CGFloat), ("保存位置：", 163 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
+        let box = NSBox(frame: NSRect(x: 30, y: 180, width: 820, height: 70)); box.title = "解密结果"; v.addSubview(box)
+        accountLabel.frame = NSRect(x: 145, y: 228, width: 650, height: 22); passwordLabel.frame = NSRect(x: 145, y: 205, width: 650, height: 22); outputLabel.frame = NSRect(x: 145, y: 182, width: 650, height: 22)
+        for (t, yy) in [("超级账号：", 228 as CGFloat), ("超级密码：", 205 as CGFloat), ("保存位置：", 182 as CGFloat)] { v.addSubview(label(t, x: 40, y: yy, w: 95)) }
         for l in [accountLabel, passwordLabel, outputLabel] { l.isSelectable = true; v.addSubview(l) }
 
-        let logBox = NSBox(frame: NSRect(x: 30, y: 20, width: 820, height: 118)); logBox.title = "运行日志"; v.addSubview(logBox)
-        let scroll = NSScrollView(frame: NSRect(x: 42, y: 33, width: 796, height: 85)); scroll.hasVerticalScroller = true; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
+        let logBox = NSBox(frame: NSRect(x: 30, y: 20, width: 820, height: 150)); logBox.title = "运行日志"; v.addSubview(logBox)
+        let scroll = NSScrollView(frame: NSRect(x: 42, y: 33, width: 796, height: 117)); scroll.hasVerticalScroller = true; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
 
         appendLog("当前软件：\(AppConstants.appName) \(AppVersion.detail)")
         appendLog("如果失败，日志会用红色显示原因；修正信息后可以直接重试。")
