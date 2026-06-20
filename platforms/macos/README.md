@@ -6,13 +6,13 @@ macOS 版本使用 Swift / AppKit 实现，SwiftPM target 源码位于：
 platforms/macos/Sources/JiulianSuperPasswordTool/
 ```
 
-macOS 平台资源位于：
+macOS 图标等设计/发布资产统一位于：
 
 ```text
-platforms/macos/Resources/
+Assets/AppIcon/macos/
 ```
 
-后端 helper 不再放在 macOS 资源目录，而是统一放在：
+后端 helper 统一放在：
 
 ```text
 shared/backend/jiulian_backend_helper.py

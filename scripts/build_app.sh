@@ -29,7 +29,7 @@ cp "$DERIVED/.build/release/$EXEC_NAME" "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
 chmod 755 "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
 cp "$ROOT/shared/backend/jiulian_backend_helper.py" "$LOCAL_APP/Contents/Resources/jiulian_backend_helper.py"
 chmod 755 "$LOCAL_APP/Contents/Resources/jiulian_backend_helper.py"
-cp "$ROOT/platforms/macos/Resources/AppIcon.icns" "$LOCAL_APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/Assets/AppIcon/macos/AppIcon.icns" "$LOCAL_APP/Contents/Resources/AppIcon.icns"
 chmod 644 "$LOCAL_APP/Contents/Resources/AppIcon.icns"
 
 cat > "$LOCAL_APP/Contents/Info.plist" <<PLIST

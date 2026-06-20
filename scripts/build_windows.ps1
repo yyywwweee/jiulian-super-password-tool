@@ -9,26 +9,14 @@ $version = (Get-Content VERSION -Raw).Trim()
 $build = (Get-Content BUILD_NUMBER -Raw).Trim()
 $dist = Join-Path $ProjectRoot "dist\windows"
 $work = Join-Path $ProjectRoot "derived\pyinstaller-windows"
-$icon = Join-Path $ProjectRoot "Assets\AppIcon.ico"
+$icon = Join-Path $ProjectRoot "Assets\AppIcon\windows\AppIcon.ico"
 New-Item -ItemType Directory -Force -Path $dist | Out-Null
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
 python -m pip install --upgrade pip
-python -m pip install pyinstaller pillow
+python -m pip install pyinstaller
 
-$iconScript = @'
-from PIL import Image
-from pathlib import Path
-root = Path.cwd()
-src = root / "Assets" / "AppIcon-1024.png"
-out = root / "Assets" / "AppIcon.ico"
-im = Image.open(src).convert("RGBA")
-im.save(out, sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-print(out)
-'@
-$iconScriptPath = Join-Path $work "generate_ico.py"
-Set-Content -Path $iconScriptPath -Value $iconScript -Encoding UTF8
-python $iconScriptPath
+if (!(Test-Path $icon)) { throw "Windows icon asset not found: $icon" }
 
 $name = "JiulianSuperPasswordTool-$version-build$build-win-x64"
 $sep = [IO.Path]::PathSeparator

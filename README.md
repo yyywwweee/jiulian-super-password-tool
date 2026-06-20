@@ -74,11 +74,10 @@ Windows 版在 Windows 环境中构建：
 ```text
 platforms/macos/                         # macOS 平台目录
 platforms/macos/Sources/JiulianSuperPasswordTool/   # macOS Swift/AppKit 前端
-platforms/macos/Resources/                # macOS 图标等平台资源
 platforms/windows/                       # Windows 图形前端
 platforms/android/                       # Android 预留目录
 shared/backend/                          # 跨平台复用后端 helper
-Assets/                                  # 共用视觉资产和图标源文件
+Assets/AppIcon/                         # App 图标设计/发布资产
 scripts/                                   # 各平台构建脚本
 .github/workflows/release-builds.yml       # 多平台 CI 构建和 Release 附件上传
 docs/                                      # 项目结构和发布流程说明

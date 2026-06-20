@@ -3,11 +3,18 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "Assets"
-ICONSET = ASSETS / "AppIcon.iconset"
-PNG1024 = ASSETS / "AppIcon-1024.png"
+ASSETS = ROOT / "Assets" / "AppIcon"
+SOURCE = ASSETS / "source"
+MACOS = ASSETS / "macos"
+WINDOWS = ASSETS / "windows"
+ICONSET = MACOS / "AppIcon.iconset"
+PNG1024 = SOURCE / "AppIcon-1024.png"
+ICNS = MACOS / "AppIcon.icns"
+ICO = WINDOWS / "AppIcon.ico"
 
-ASSETS.mkdir(parents=True, exist_ok=True)
+SOURCE.mkdir(parents=True, exist_ok=True)
+MACOS.mkdir(parents=True, exist_ok=True)
+WINDOWS.mkdir(parents=True, exist_ok=True)
 ICONSET.mkdir(parents=True, exist_ok=True)
 
 S = 1024
@@ -85,5 +92,10 @@ sizes = [
 for size, name in sizes:
     img.resize((size, size), Image.Resampling.LANCZOS).save(ICONSET / name)
 
+import subprocess
+subprocess.run(["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)], check=True)
+img.save(ICO, sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
 print(PNG1024)
 print(ICONSET)
+print(ICNS)
+print(ICO)
