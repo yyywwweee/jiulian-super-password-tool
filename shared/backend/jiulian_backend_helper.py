@@ -17,8 +17,8 @@ from datetime import datetime
 
 REMOTE_ENCRYPTED_FILE = "/config/workb/backup_lastgood.xml"
 REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
-DEBUG_LOG_DIR = pathlib.Path.home() / "Library/Application Support/local.jiulian.superpassword/Logs"
-DEBUG_LOG_FILE = DEBUG_LOG_DIR / "backend_debug.log"
+DEBUG_LOG_DIR = pathlib.Path.home() / "Library/Application Support/com.jiulian.superpassword-tool/Logs"
+_debug_dir = None
 ANSI_RE = re.compile(rb"\x1b\[[0-9;]*[A-Za-z]")
 STREAM = False
 
@@ -44,13 +44,16 @@ def emit(obj):
 
 def debug(title, detail):
     try:
-        DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
-        with DEBUG_LOG_FILE.open("a", encoding="utf-8") as f:
+        log_dir = pathlib.Path(_debug_dir) if _debug_dir else DEBUG_LOG_DIR
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "backend_debug.log"
+        with log_file.open("a", encoding="utf-8") as f:
             f.write(f"\n[{datetime.now().isoformat(timespec='seconds')}] {title}\n")
             f.write(str(detail))
             f.write("\n")
         try:
-            os.chmod(DEBUG_LOG_FILE, 0o600)
+            log_file_path = log_dir / "backend_debug.log"
+            os.chmod(log_file_path, 0o600)
         except Exception:
             pass
     except Exception:
@@ -245,6 +248,8 @@ def run(params):
     password = str(params.get("password", ""))
     output_dir = pathlib.Path(str(params.get("output_dir", str(pathlib.Path.home() / "Downloads")))).expanduser()
     clean_tmp = bool(params.get("clean_tmp", True))
+    global _debug_dir
+    _debug_dir = str(params.get("debug_dir", "") or "")
 
     if not host:
         raise ValueError("请填写光猫 IP。")
@@ -472,10 +477,11 @@ def run(params):
 
 
 def main():
-    global STREAM
+    global STREAM, _debug_dir
     try:
         params = json.loads(sys.stdin.read() or "{}")
         STREAM = bool(params.get("stream"))
+        _debug_dir = str(params.get("debug_dir", "") or "")
         result = run(params)
         if STREAM:
             final = {k: v for k, v in result.items() if k != "logs"}

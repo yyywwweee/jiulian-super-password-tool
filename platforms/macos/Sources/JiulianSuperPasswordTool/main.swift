@@ -123,6 +123,7 @@ enum Runner {
                 "output_dir": outputDir,
                 "clean_tmp": cleanTmp,
                 "stream": true,
+                "debug_dir": AppConstants.appSupportDir.appendingPathComponent("Logs").path,
             ]
             let input = try JSONSerialization.data(withJSONObject: payload, options: [])
             let p = Process()

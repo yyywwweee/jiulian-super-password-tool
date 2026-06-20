@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="九联光猫获取超级密码工具"
 EXEC_NAME="JiulianSuperPasswordTool"
-BUNDLE_ID="local.jiulian.superpassword"
+BUNDLE_ID="com.jiulian.superpassword-tool"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 BUILD="$(tr -d '[:space:]' < "$ROOT/BUILD_NUMBER")"
 GIT_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"

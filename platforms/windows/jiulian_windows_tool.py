@@ -264,6 +264,7 @@ class App(tk.Tk):
             "output_dir": self.output_var.get().strip() or str(pathlib.Path.home() / "Downloads"),
             "clean_tmp": self.clean_var.get(),
             "stream": True,
+            "debug_dir": str(app_data_dir() / "Logs"),
         }
         self.worker = threading.Thread(target=self._run_backend, args=(params,), daemon=True)
         self.worker.start()
