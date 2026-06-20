@@ -11,7 +11,6 @@ import pathlib
 import re
 import socket
 import sys
-import telnetlib
 import time
 import traceback
 from datetime import datetime
@@ -21,6 +20,142 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 DEBUG_LOG_FILE = pathlib.Path.home() / "jiulian_super_password_backend_debug.log"
 ANSI_RE = re.compile(rb"\x1b\[[0-9;]*[A-Za-z]")
 STREAM = False
+
+class MinimalTelnet:
+    """Small Telnet client for this tool.
+
+    Python's stdlib telnetlib was deprecated and removed in newer Python
+    versions. The tool only needs a small subset of Telnet behavior, so keep a
+    local implementation instead of depending on telnetlib availability.
+    """
+
+    IAC = 255
+    DONT = 254
+    DO = 253
+    WONT = 252
+    WILL = 251
+    SB = 250
+    SE = 240
+
+    def __init__(self, host, port=23, timeout=6):
+        self.sock = socket.create_connection((host, port), timeout=timeout)
+        self.sock.settimeout(timeout)
+        self._closed = False
+        self._sb = False
+
+    def get_socket(self):
+        return self.sock
+
+    def close(self):
+        self._closed = True
+        try:
+            self.sock.close()
+        except Exception:
+            pass
+
+    def write(self, data):
+        if isinstance(data, str):
+            data = data.encode()
+        self.sock.sendall(data)
+
+    def _reply(self, command, option):
+        try:
+            self.sock.sendall(bytes([self.IAC, command, option]))
+        except Exception:
+            pass
+
+    def _cook(self, raw):
+        out = bytearray()
+        i = 0
+        n = len(raw)
+        while i < n:
+            b = raw[i]
+            if b != self.IAC:
+                if not self._sb:
+                    out.append(b)
+                i += 1
+                continue
+
+            i += 1
+            if i >= n:
+                break
+            cmd = raw[i]
+            i += 1
+
+            if cmd == self.IAC:
+                if not self._sb:
+                    out.append(self.IAC)
+                continue
+            if cmd in (self.DO, self.DONT, self.WILL, self.WONT):
+                if i >= n:
+                    break
+                opt = raw[i]
+                i += 1
+                if cmd == self.DO:
+                    self._reply(self.WONT, opt)
+                elif cmd == self.WILL:
+                    self._reply(self.DONT, opt)
+                continue
+            if cmd == self.SB:
+                self._sb = True
+                continue
+            if cmd == self.SE:
+                self._sb = False
+                continue
+            # Other single-byte Telnet commands are ignored.
+        return bytes(out)
+
+    def _recv_cooked(self, timeout):
+        old_timeout = self.sock.gettimeout()
+        try:
+            self.sock.settimeout(timeout)
+            data = self.sock.recv(4096)
+        finally:
+            try:
+                self.sock.settimeout(old_timeout)
+            except Exception:
+                pass
+        if data == b"":
+            raise EOFError("Telnet connection closed")
+        return self._cook(data)
+
+    def read_until(self, expected, timeout=None):
+        end = time.time() + (timeout if timeout is not None else 0)
+        data = b""
+        while True:
+            if expected in data:
+                return data
+            if timeout is not None:
+                remain = end - time.time()
+                if remain <= 0:
+                    return data
+                recv_timeout = min(0.5, max(0.05, remain))
+            else:
+                recv_timeout = 0.5
+            try:
+                data += self._recv_cooked(recv_timeout)
+            except socket.timeout:
+                if timeout is not None and time.time() >= end:
+                    return data
+            except TimeoutError:
+                if timeout is not None and time.time() >= end:
+                    return data
+            except EOFError:
+                return data
+
+    def read_very_eager(self):
+        chunks = []
+        while True:
+            try:
+                chunk = self._recv_cooked(0.01)
+            except (socket.timeout, TimeoutError):
+                break
+            except EOFError:
+                raise
+            if not chunk:
+                break
+            chunks.append(chunk)
+        return b"".join(chunks)
 
 
 def emit(obj):
@@ -157,7 +292,7 @@ def run(params):
     try:
         log(logs, "步骤 1/5：正在连接光猫…")
         try:
-            tn = telnetlib.Telnet(host, port, timeout=6)
+            tn = MinimalTelnet(host, port, timeout=6)
             try:
                 tn.get_socket().settimeout(0.5)
             except Exception:

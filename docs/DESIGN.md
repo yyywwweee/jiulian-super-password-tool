@@ -470,7 +470,7 @@ Android 版建议继续沿用“UI 独立、核心协议复用”的原则：
 
 1. Python `telnetlib` 兼容性风险
 
-   后端依赖 `telnetlib`。该模块在较新的 Python 版本中已不可用。本地当前 Python 3.14 环境执行 `import telnetlib` 会报 `ModuleNotFoundError`。CI 当前使用 Python 3.12，Windows 打包产物风险较低；macOS 运行时依赖系统 `python3`，需要确认目标用户环境是否仍包含 `telnetlib`。建议后续改为 vendored telnet 实现或第三方兼容库。
+   后端已内置最小 Telnet 客户端，不再依赖 Python 标准库 `telnetlib`。这样可避免 Python 3.13+ 移除 `telnetlib` 后 Windows/macOS 后端无法加载。
 
 2. XML 解析较简单
 
@@ -511,10 +511,4 @@ python -m py_compile shared/backend/jiulian_backend_helper.py platforms/windows/
 
 语法检查通过。
 
-同时确认：
-
-```text
-python -c "import telnetlib"
-```
-
-在当前 Python 3.14 环境失败，属于运行时兼容性风险。
+同时确认后端源码中不再存在 `import telnetlib` / `telnetlib.Telnet` 依赖，并通过本地 Telnet mock server 完成登录、命令执行、base64 回传和账号密码解析的集成测试。
