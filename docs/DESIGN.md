@@ -319,13 +319,13 @@ jiulian_super_password_<safe_host>_<yyyyMMdd_HHmmss>.xml
 
 macOS 版本源码：
 
-- `platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift`
+- `macOS Info.plist standard version fields`
 
 生成脚本：
 
-- `scripts/generate_version.sh`
+- `scripts/build_app.sh`
 
-提交时可通过 `hooks/pre-commit` 自动递增构建号并重新生成版本源码。
+提交时可通过 `hooks/pre-commit` 自动递增构建号；macOS 构建时由 `scripts/build_app.sh` 写入 `Info.plist` 标准版本字段。
 
 ### 8.2 macOS 构建
 
@@ -337,7 +337,7 @@ macOS 版本源码：
 
 主要步骤：
 
-1. 生成 `GeneratedVersion.swift`。
+1. 写入 macOS `Info.plist` 标准版本字段。
 2. 使用 SwiftPM 构建 release 可执行文件。
 3. 组装 `.app` bundle。
 4. 拷贝 Python helper 和图标资源到 bundle。
@@ -490,7 +490,7 @@ Android 版建议继续沿用“UI 独立、核心协议复用”的原则：
 
 6. Git 工具依赖
 
-   本地当前环境无法识别 `git` 命令，因此 `git status`、pre-commit hook、`generate_version.sh` 中的 git commit 获取等能力在该环境不可用。项目脚本本身有 unknown fallback，但本地提交和 hook 依赖需要安装 Git。
+   本地当前环境无法识别 `git` 命令，因此 `git status`、pre-commit hook 中的构建号递增、以及 macOS 构建时的 git commit 获取等能力在该环境不可用。项目脚本本身有 unknown fallback，但本地提交和 hook 依赖需要安装 Git。
 
 ## 13. 验证策略
 

@@ -115,7 +115,7 @@ docs/                                      # 项目结构和发布流程说明
 版本信息会自动生成到：
 
 ```text
-platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift
+macOS Info.plist standard version fields
 ```
 
 App 界面和运行日志会显示：
@@ -130,10 +130,6 @@ v1.0.0 (Build 2)
 ./scripts/install_git_hooks.sh
 ```
 
-之后每次提交时会自动：
-
-1. 递增 `BUILD_NUMBER`
-2. 重新生成 `GeneratedVersion.swift`
-3. 将版本文件加入本次 commit
+之后每次提交时会自动递增 `BUILD_NUMBER`，并将 `VERSION` / `BUILD_NUMBER` 加入本次 commit。macOS 构建时会把这些值写入 `Info.plist` 标准版本字段
 
 发布新功能版本时，手动修改 `VERSION`，例如从 `1.0.0` 改为 `1.1.0`，然后正常 commit 即可。

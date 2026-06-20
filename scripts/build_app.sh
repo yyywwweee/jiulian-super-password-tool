@@ -7,6 +7,8 @@ EXEC_NAME="JiulianSuperPasswordTool"
 BUNDLE_ID="local.jiulian.superpassword"
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 BUILD="$(tr -d '[:space:]' < "$ROOT/BUILD_NUMBER")"
+GIT_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+BUILD_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 DIST="$ROOT/dist"
 
 # Build intermediates and code signing on SMB/network/external volumes can fail
@@ -23,7 +25,6 @@ ZIP="$DIST/$APP_NAME-$VERSION.app.zip"
 rm -rf "$LOCAL_BUILD_ROOT" "$APP" "$ZIP"
 mkdir -p "$LOCAL_APP/Contents/MacOS" "$LOCAL_APP/Contents/Resources" "$DIST"
 
-"$ROOT/scripts/generate_version.sh"
 swift build -c release --package-path "$ROOT" --scratch-path "$DERIVED/.build"
 cp "$DERIVED/.build/release/$EXEC_NAME" "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
 chmod 755 "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
@@ -60,6 +61,10 @@ cat > "$LOCAL_APP/Contents/Info.plist" <<PLIST
     <string>$VERSION</string>
     <key>CFBundleVersion</key>
     <string>$BUILD</string>
+    <key>JiulianGitCommit</key>
+    <string>$GIT_COMMIT</string>
+    <key>JiulianBuildTime</key>
+    <string>$BUILD_TIME</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSApplicationCategoryType</key>

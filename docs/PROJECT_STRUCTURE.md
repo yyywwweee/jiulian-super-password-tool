@@ -18,7 +18,6 @@
 │   ├── package_dmg.sh                         # macOS DMG 打包
 │   ├── build_windows.ps1                      # Windows exe 构建，需在 Windows 环境运行
 │   ├── generate_icon.py                       # 生成 macOS 图标资源
-│   ├── generate_version.sh                    # 生成 macOS 版本信息源码
 │   └── install_git_hooks.sh                   # 安装构建号自增 hook
 ├── .github/workflows/release-builds.yml       # 多平台 CI 构建和 Release 附件上传
 ├── VERSION                                    # 语义版本号，所有平台共用

@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
 BUILD_FILE="$ROOT/BUILD_NUMBER"
-GEN_SCRIPT="$ROOT/scripts/generate_version.sh"
 
 if [[ ! -f "$BUILD_FILE" ]]; then
   echo "0" > "$BUILD_FILE"
@@ -13,5 +12,4 @@ if ! [[ "$BUILD" =~ ^[0-9]+$ ]]; then BUILD="0"; fi
 BUILD=$((BUILD + 1))
 echo "$BUILD" > "$BUILD_FILE"
 
-"$GEN_SCRIPT"
-git add "$ROOT/VERSION" "$ROOT/BUILD_NUMBER" "$ROOT/platforms/macos/Sources/JiulianSuperPasswordTool/GeneratedVersion.swift"
+git add "$ROOT/VERSION" "$ROOT/BUILD_NUMBER"

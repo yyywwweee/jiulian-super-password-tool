@@ -6,6 +6,41 @@ enum AppConstants {
     static let cacheURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".jiulian_super_password_native_cache.json")
 }
 
+
+enum AppVersion {
+    private static func infoString(_ key: String, default fallback: String) -> String {
+        let value = Bundle.main.infoDictionary?[key] as? String
+        if let value, !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return value
+        }
+        return fallback
+    }
+
+    static var version: String {
+        infoString("CFBundleShortVersionString", default: "dev")
+    }
+
+    static var build: String {
+        infoString("CFBundleVersion", default: "0")
+    }
+
+    static var gitCommit: String {
+        infoString("JiulianGitCommit", default: "unknown")
+    }
+
+    static var buildTime: String {
+        infoString("JiulianBuildTime", default: "unknown")
+    }
+
+    static var display: String {
+        "v\(version) (Build \(build))"
+    }
+
+    static var detail: String {
+        "v\(version) (Build \(build), \(gitCommit))"
+    }
+}
+
 struct Cache: Codable {
     var host: String = "192.168.0.1"
     var port: String = "23"
