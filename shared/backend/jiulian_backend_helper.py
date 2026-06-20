@@ -104,16 +104,50 @@ def is_our_tmp(path):
     return re.fullmatch(r"/tmp/oclg_[0-9]+_[0-9]+\.dec", path or "") is not None
 
 
+
+def read_until_bytes(tn, token, hard=120.0, idle_after_data=8.0):
+    """Read Telnet output until token appears or a real timeout occurs.
+
+    `read_some()` is quiet-window based and is good for short command output.
+    Large base64 transfers can pause between chunks on real devices, so this
+    path waits for an explicit end marker instead of returning after a short
+    quiet gap.
+    """
+    token = token if isinstance(token, bytes) else str(token).encode()
+    data = b""
+    start_at = time.time()
+    last_data_at = None
+    while time.time() - start_at < hard:
+        try:
+            chunk = tn.read_very_eager()
+        except socket.timeout:
+            chunk = b""
+        except EOFError:
+            break
+        if chunk:
+            data += chunk
+            last_data_at = time.time()
+            if token in data:
+                return data
+            continue
+        if last_data_at is not None and time.time() - last_data_at >= idle_after_data:
+            return data
+        time.sleep(0.08)
+    return data
+
+
 def fetch_remote_file_base64(tn, remote_path):
     start = "__OC_B64_BEGIN__"
     end = "__OC_B64_END__"
-    tn.write(f"printf '\\n{start}\\n'; base64 {remote_path}; printf '\\n{end}\\n'\n".encode())
-    time.sleep(0.8)
-    cap = read_some(tn, quiet=20.0, hard=60.0)
+    # Use echo rather than printf for better compatibility with minimal embedded shells.
+    tn.write(f"echo {start}; base64 {remote_path}; echo {end}\n".encode())
+    cap = read_until_bytes(tn, end.encode(), hard=120.0, idle_after_data=8.0)
     if end.encode() not in cap:
-        cap += read_some(tn, quiet=10.0, hard=20.0)
-    if end.encode() not in cap:
-        debug("fetch timeout", strip_ansi(cap)[-1500:].decode("latin1", errors="replace"))
+        debug("fetch timeout", {
+            "remote_path": remote_path,
+            "received_bytes": len(cap),
+            "tail": strip_ansi(cap)[-4000:].decode("latin1", errors="replace"),
+        })
         raise RuntimeError("传回结果超时，请重试。")
 
     cap = strip_ansi(cap)
@@ -129,14 +163,13 @@ def fetch_remote_file_base64(tn, remote_path):
         if collecting and re.fullmatch(rb"[A-Za-z0-9+/=]{8,}", s):
             b64_lines.append(s)
     if not b64_lines:
-        debug("fetch empty", cap[:2000].decode("latin1", errors="replace"))
+        debug("fetch empty", cap[:4000].decode("latin1", errors="replace"))
         raise RuntimeError("没有收到有效结果数据，请重试。")
     try:
         return base64.b64decode(b"".join(b64_lines))
     except Exception as e:
-        debug("base64 decode failed", repr(e))
+        debug("base64 decode failed", {"error": repr(e), "lines": len(b64_lines)})
         raise RuntimeError("结果数据校验失败，请重试。")
-
 
 def parse_value(xml_text, name):
     pattern = rf'<Value\s+Name="{re.escape(name)}"\s+Value="([^"]*)"'
