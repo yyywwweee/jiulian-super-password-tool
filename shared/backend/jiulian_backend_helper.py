@@ -394,12 +394,11 @@ def run(params):
             debug("filter xml failed", {"error": repr(filter_err)})
             log(logs, "步骤 4/5：过滤 XML 失败，正在回传完整配置文件…")
 
-        if not use_filtered:
-            run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
-
         xml_bytes = None
         for retry in range(1, 4):
             try:
+                if not use_filtered:
+                    run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
                 xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
                 break
             except Exception as fetch_err:
