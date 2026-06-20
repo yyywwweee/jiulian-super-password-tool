@@ -83,8 +83,8 @@ class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title(f"{APP_NAME} {DISPLAY_VERSION}")
-        self.geometry("900x680")
-        self.minsize(820, 620)
+        self.geometry("900x800")
+        self.minsize(840, 700)
         self.log_queue: "queue.Queue[tuple[str, object]]" = queue.Queue()
         self.worker: threading.Thread | None = None
         self.backend = None
@@ -102,6 +102,7 @@ class App(tk.Tk):
 
         self._load_cache()
         self._build_ui()
+        self._fit_initial_window()
         self.after(80, self._drain_queue)
 
     def _load_cache(self) -> None:
@@ -132,12 +133,12 @@ class App(tk.Tk):
 
     def _build_ui(self) -> None:
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(3, weight=1)
+        self.rowconfigure(0, weight=1)
 
         root = ttk.Frame(self, padding=18)
         root.grid(row=0, column=0, sticky="nsew")
         root.columnconfigure(1, weight=1)
-        root.rowconfigure(5, weight=1)
+        root.rowconfigure(6, weight=1)
 
         title = ttk.Label(root, text=f"{APP_NAME} {DISPLAY_VERSION}", font=("Microsoft YaHei UI", 20, "bold"))
         title.grid(row=0, column=0, columnspan=4, sticky="w", pady=(0, 4))
@@ -191,9 +192,8 @@ class App(tk.Tk):
         log_box.grid(row=6, column=0, columnspan=4, sticky="nsew")
         log_box.columnconfigure(0, weight=1)
         log_box.rowconfigure(0, weight=1)
-        root.rowconfigure(6, weight=1)
 
-        self.log_text = tk.Text(log_box, height=12, wrap="word", font=("Consolas", 10))
+        self.log_text = tk.Text(log_box, height=10, wrap="word", font=("Consolas", 10))
         scroll = ttk.Scrollbar(log_box, orient="vertical", command=self.log_text.yview)
         self.log_text.configure(yscrollcommand=scroll.set)
         self.log_text.grid(row=0, column=0, sticky="nsew")
@@ -204,6 +204,16 @@ class App(tk.Tk):
 
         self._append_log(f"当前软件：{APP_NAME} {DISPLAY_VERSION}")
         self._append_log("如果失败，日志会用红色显示原因；修正信息后可以直接重试。")
+
+    def _fit_initial_window(self) -> None:
+        self.update_idletasks()
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        width = max(900, self.winfo_reqwidth())
+        height = max(800, self.winfo_reqheight())
+        width = min(width, max(840, screen_w - 80))
+        height = min(height, max(700, screen_h - 120))
+        self.geometry(f"{width}x{height}")
 
     def _choose_dir(self) -> None:
         path = filedialog.askdirectory(initialdir=self.output_var.get() or str(pathlib.Path.home()))

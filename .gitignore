@@ -5,3 +5,7 @@ derived/
 dist/
 *.xcuserstate
 *.log
+Thumbs.db
+__pycache__/
+*.pyc
+Assets/AppIcon.ico

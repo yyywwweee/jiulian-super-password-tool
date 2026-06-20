@@ -9,21 +9,29 @@ VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 BUILD="$(tr -d '[:space:]' < "$ROOT/BUILD_NUMBER")"
 DERIVED="$ROOT/derived"
 DIST="$ROOT/dist"
-APP="$DIST/$APP_NAME.app"
 
-rm -rf "$DERIVED" "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$DIST"
+# Code signing on SMB/network/external volumes can fail with
+# "resource fork, Finder information, or similar detritus not allowed".
+# Build/sign/package the .app on the local filesystem, then copy artifacts back.
+LOCAL_BUILD_ROOT="${TMPDIR:-/tmp}/jiulian-super-password-tool-build"
+LOCAL_APP="$LOCAL_BUILD_ROOT/$APP_NAME.app"
+LOCAL_ZIP="$LOCAL_BUILD_ROOT/$APP_NAME-$VERSION.app.zip"
+APP="$DIST/$APP_NAME.app"
+ZIP="$DIST/$APP_NAME-$VERSION.app.zip"
+
+rm -rf "$DERIVED" "$LOCAL_BUILD_ROOT" "$APP" "$ZIP"
+mkdir -p "$LOCAL_APP/Contents/MacOS" "$LOCAL_APP/Contents/Resources" "$DIST"
 
 "$ROOT/scripts/generate_version.sh"
 swift build -c release --package-path "$ROOT" --scratch-path "$DERIVED/.build"
-cp "$DERIVED/.build/release/$EXEC_NAME" "$APP/Contents/MacOS/$EXEC_NAME"
-chmod 755 "$APP/Contents/MacOS/$EXEC_NAME"
-cp "$ROOT/shared/backend/jiulian_backend_helper.py" "$APP/Contents/Resources/jiulian_backend_helper.py"
-chmod 755 "$APP/Contents/Resources/jiulian_backend_helper.py"
-cp "$ROOT/platforms/macos/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
-chmod 644 "$APP/Contents/Resources/AppIcon.icns"
+cp "$DERIVED/.build/release/$EXEC_NAME" "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
+chmod 755 "$LOCAL_APP/Contents/MacOS/$EXEC_NAME"
+cp "$ROOT/shared/backend/jiulian_backend_helper.py" "$LOCAL_APP/Contents/Resources/jiulian_backend_helper.py"
+chmod 755 "$LOCAL_APP/Contents/Resources/jiulian_backend_helper.py"
+cp "$ROOT/platforms/macos/Resources/AppIcon.icns" "$LOCAL_APP/Contents/Resources/AppIcon.icns"
+chmod 644 "$LOCAL_APP/Contents/Resources/AppIcon.icns"
 
-cat > "$APP/Contents/Info.plist" <<PLIST
+cat > "$LOCAL_APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -58,9 +66,18 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-plutil -lint "$APP/Contents/Info.plist"
-codesign --force --deep --sign - "$APP"
-codesign --verify --deep --strict --verbose=2 "$APP"
-/usr/bin/ditto -c -k --keepParent "$APP" "$DIST/$APP_NAME-$VERSION.app.zip"
+plutil -lint "$LOCAL_APP/Contents/Info.plist"
+if command -v xattr >/dev/null 2>&1; then
+  xattr -cr "$LOCAL_APP" || true
+fi
+codesign --force --deep --sign - "$LOCAL_APP"
+codesign --verify --deep --strict --verbose=2 "$LOCAL_APP"
+/usr/bin/ditto -c -k --keepParent "$LOCAL_APP" "$LOCAL_ZIP"
 
+# Preserve the signed app as an artifact in dist. ditto is safer than cp for bundles.
+/usr/bin/ditto "$LOCAL_APP" "$APP"
+cp "$LOCAL_ZIP" "$ZIP"
+
+# The copied app on network storage may not be suitable for re-signing there,
+# but the ZIP/DMG are produced from the signed local bundle.
 echo "$APP"
