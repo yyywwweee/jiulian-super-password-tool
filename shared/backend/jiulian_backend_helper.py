@@ -396,16 +396,8 @@ def run(params):
 
         xml_bytes = None
         for retry in range(1, 4):
-            try:
-                if not use_filtered:
-                    run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
-                xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
-                break
-            except Exception as fetch_err:
-                log(logs, f"步骤 4/5：回传失败：{fetch_err}", "error")
-                if retry >= 3:
-                    break
-                wait_sec = retry * 5
+            if retry > 1:
+                wait_sec = (retry - 1) * 5
                 log(logs, f"步骤 4/5：等待 {wait_sec} 秒后重连并重试（第 {retry}/3 次）…")
                 try:
                     tn.close()
@@ -429,6 +421,15 @@ def run(params):
                 except Exception as reconnect_err:
                     log(logs, f"步骤 4/5：重连失败：{reconnect_err}", "error")
                     continue
+            try:
+                if not use_filtered:
+                    run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
+                xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
+                break
+            except Exception as fetch_err:
+                log(logs, f"步骤 4/5：回传失败：{fetch_err}", "error")
+                if retry >= 3:
+                    break
 
         if xml_bytes is None:
             log(logs, f"取回信息失败，开始清理临时文件 {remote_tmp}", "error")
