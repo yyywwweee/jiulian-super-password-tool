@@ -80,3 +80,25 @@ JiulianSuperPasswordTool-<version>-build<build>-android-arm64.apk
 - macOS 发布包为 ad-hoc 签名，未进行 Apple Developer ID 公证。
 - Windows exe 未进行代码签名时，SmartScreen 可能提示风险，需要用户手动允许运行。
 ```
+
+## 本地构建归档
+
+本机执行：
+
+```bash
+./scripts/build_release.sh
+```
+
+除了生成 `dist/` 下的本地 macOS 产物外，如果 NAS 磁盘已挂载，还会自动复制一份到：
+
+```text
+/Volumes/西数紫盘4T/jiulian-super-password-tool-releases/v<VERSION>/build<BUILD_NUMBER>/
+```
+
+可通过环境变量覆盖归档根目录：
+
+```bash
+JIULIAN_RELEASE_ARCHIVE_ROOT=/path/to/archive ./scripts/build_release.sh
+```
+
+如果 NAS 未挂载，归档步骤会跳过，不影响本地构建成功。

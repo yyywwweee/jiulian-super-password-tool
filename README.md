@@ -60,7 +60,7 @@ Windows 版在 Windows 环境中构建：
 ./scripts/build_windows.ps1
 ```
 
-构建产物位于 `dist/`。正式 GitHub Release 附件统一使用英文命名，例如：
+构建产物位于 `dist/`。本地构建时，如果 NAS 磁盘已挂载，会额外归档到 `/Volumes/西数紫盘4T/jiulian-super-password-tool-releases/`。正式 GitHub Release 附件统一使用英文命名，例如：
 
 - `JiulianSuperPasswordTool-<version>-build<build>-macos-arm64.dmg`
 - `JiulianSuperPasswordTool-<version>-build<build>-macos-arm64.app.zip`

@@ -3,9 +3,9 @@ import Foundation
 
 enum AppVersion {
     static let version = "1.0.2"
-    static let build = "19"
-    static let gitCommit = "9bb5589"
-    static let generatedAt = "2026-06-20T05:27:52Z"
+    static let build = "20"
+    static let gitCommit = "5ea2389"
+    static let generatedAt = "2026-06-20T05:44:44Z"
     static let display = "v\(version) (Build \(build))"
     static let detail = "v\(version) (Build \(build), \(gitCommit))"
 }
