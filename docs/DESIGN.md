@@ -100,19 +100,23 @@ docs/
 
 关键对象：
 
-- `AppConstants`：应用名称、缓存文件路径。
+- `AppConstants`：应用名称、缓存文件路径（动态读取 Bundle ID）。
 - `Cache`：本地缓存模型。
 - `RunResult`：后端运行结果模型。
 - `Runner`：负责启动 Python 子进程、处理流式输出。
 - `AppDelegate`：负责 UI 生命周期和用户交互。
 
-macOS 缓存位置：
+macOS 缓存及日志位置（跟随 Bundle ID）：
 
 ```text
-~/.jiulian_super_password_native_cache.json
+~/Library/Application Support/com.jiulian.superpassword-tool/
+├── cache.json
+└── Logs/
+    ├── native_debug.log
+    └── backend_debug.log
 ```
 
-缓存文件权限会设置为 `0600`。
+缓存和日志文件权限设置为 `0600`。
 
 ### 4.2 Windows 前端
 
@@ -135,10 +139,14 @@ macOS 缓存位置：
 - `load_backend_module()`：动态加载共享后端 helper。
 - `log_queue`：后端线程与 UI 主线程之间的消息队列。
 
-Windows 缓存位置：
+Windows 缓存及日志位置：
 
 ```text
-%APPDATA%\JiulianSuperPasswordTool\cache.json
+%APPDATA%\JiulianSuperPasswordTool\
+├── cache.json
+├── windows_debug.log
+└── Logs\
+    └── backend_debug.log
 ```
 
 ### 4.3 共享后端 helper
@@ -166,11 +174,12 @@ REMOTE_ENCRYPTED_FILE = "/config/workb/backup_lastgood.xml"
 REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 ```
 
-后端调试日志位置：
+后端调试日志位置（由前端通过 `debug_dir` 参数传入，fallback 为 macOS 标准路径）：
 
-```text
-~/jiulian_super_password_backend_debug.log
-```
+- macOS：`~/Library/Application Support/com.jiulian.superpassword-tool/Logs/backend_debug.log`
+- Windows：`%APPDATA%\JiulianSuperPasswordTool\Logs\backend_debug.log`
+
+前后端 debug 日志路径统一，不再使用 home 目录散放。
 
 ## 5. 前后端通信协议
 
@@ -186,7 +195,8 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
   "password": "登录密码",
   "output_dir": "/Users/example/Downloads",
   "clean_tmp": true,
-  "stream": true
+  "stream": true,
+  "debug_dir": "/path/to/logs"
 }
 ```
 
@@ -199,6 +209,7 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 - `output_dir`：本机结果保存目录。
 - `clean_tmp`：完成后是否清理设备侧临时文件。
 - `stream`：是否开启流式 JSON 日志输出。
+- `debug_dir`：后端调试日志目录，macOS 由 Swift 传入 `AppSupport/Logs`，Windows 传入 `%APPDATA%/JiulianSuperPasswordTool/Logs`。
 
 ### 5.2 流式日志
 
@@ -254,11 +265,12 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 6. 后端完成用户名和密码登录
 7. 后端检查设备配置文件
 8. 后端调用设备侧解密命令
-9. 后端读取解密后的临时 XML
-10. 后端解析超级管理员账号/密码
-11. 后端保存 XML 到本机
-12. 后端按设置清理设备侧临时文件
-13. 前端展示结果并恢复按钮状态
+9. 后端过滤/复制解密后的临时 XML（awk 过滤失败自动回退完整文件）
+10. 后端通过 base64 传回临时 XML（断连时重连重试 3 次，5s/10s/15s 退避）
+11. 后端解析超级管理员账号/密码
+12. 后端保存 XML 到本机
+13. 后端按设置清理设备侧临时文件（断连时重连重试 3 次，5s/10s/15s 退避）
+14. 前端展示结果并恢复按钮状态
 ```
 
 远端命令执行采用 marker 包裹：
@@ -304,9 +316,10 @@ jiulian_super_password_<safe_host>_<yyyyMMdd_HHmmss>.xml
 
 调试日志只用于排查异常，不进入 UI 主日志：
 
-- macOS 前端：`~/jiulian_super_password_native_debug.log`
-- 共享后端：`~/jiulian_super_password_backend_debug.log`
+- macOS 前端：`~/Library/Application Support/<bundle-id>/Logs/native_debug.log`
+- 共享后端：前端通过 `debug_dir` 参数传入路径，fallback 同上
 - Windows 前端：`%APPDATA%\JiulianSuperPasswordTool\windows_debug.log`
+- Windows 后端：`%APPDATA%\JiulianSuperPasswordTool\Logs\backend_debug.log`
 
 ## 8. 构建与发布设计
 
@@ -417,6 +430,17 @@ Release 附件统一使用英文 ASCII 文件名，避免 GitHub 截断中文附
 - 输入错误：前端直接阻止执行，例如空 IP、空用户名、空密码、端口非数字。
 - 可恢复运行错误：后端返回用户可理解的错误，例如连接失败、登录失败、配置文件不存在、设备响应超时。
 - 调试错误：原始 stderr、非 JSON 输出、远端命令尾部内容写入调试日志，避免污染普通用户界面。
+
+断连重试机制：
+
+- 步骤 4（回传 XML）：Telnet 断连后自动重连重试 3 次（5s/10s/15s 退避），重连成功后重新 cp+base64 传回。重连失败跳过本轮，不报误导日志。
+- 步骤 5（清理临时文件）：Telnet 断连后重连重试 3 次（5s/10s/15s 退避），重连成功后继续清理。前三轮失败只说"将重连重试"，三轮全败后才提示"请手动登录"。
+- 重连失败原因（timed out / WinError 10054 等）直接展示，不静默吞掉。
+
+错误日志级别：
+
+- 所有失败信息使用 `level="error"`，GUI 显示红色字体。
+- `main()` 异常处理不再覆盖 `run()` 已产生的步骤日志，清理提示不丢失。
 
 UI 行为：
 
