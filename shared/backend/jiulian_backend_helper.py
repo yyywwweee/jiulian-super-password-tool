@@ -540,7 +540,6 @@ def main():
         emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": f"FAIL: {e}", "level": "error"})
         emit({"type": "log", "time": datetime.now().strftime("%H:%M:%S"), "message": "请检查光猫 IP、登录用户名/密码、网络连接，确认设备在线后重试。", "level": "error"})
         result = {"ok": False, "error": str(e)}
-        result = {"ok": False, "error": str(e)}
         if STREAM:
             emit({"type": "result", "ok": False, "error": str(e)})
         else:
