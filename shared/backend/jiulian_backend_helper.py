@@ -337,22 +337,29 @@ def run(params):
         #   - aucTelnetUsername 所在的 Dir
         #   - DEVINFO_TAB 块
         filtered_tmp = remote_tmp + ".f"
+        # 用 awk 按嵌套深度提取 3 个目标 Dir 块。
+        # 兼容 busybox awk：显式赋值、$0 ~ /re/ 语法、BEGIN 初始化 depth。
         awk_script = (
-            '/<Dir[ >]/{'
-            'depth++'
-            'bufs[depth]=$0"\\n"'
-            'keeps[depth]=0'
-            'if(/aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/)keeps[depth]=1'
+            'BEGIN { depth = 0 }'
+            '/<Dir[ >]/ {'
+            'depth = depth + 1'
+            'bufs[depth] = $0 "\\n"'
+            'keeps[depth] = 0'
+            'if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1'
             'next'
             '}'
-            '/<\\/Dir>/{'
-            'bufs[depth]=bufs[depth] $0 "\\n"'
-            'if(keeps[depth])printf "%s", bufs[depth]'
-            'depth--'
+            '/<\\/Dir>/ {'
+            'bufs[depth] = bufs[depth] $0 "\\n"'
+            'if (keeps[depth] == 1) printf "%s", bufs[depth]'
+            'depth = depth - 1'
             'next'
             '}'
-            '{if(depth>0){bufs[depth]=bufs[depth] $0 "\\n"'
-            'if(/aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/)keeps[depth]=1}}'
+            '{'
+            'if (depth > 0) {'
+            'bufs[depth] = bufs[depth] $0 "\\n"'
+            'if ($0 ~ /aucTeleAccountPassword|aucTelnetUsername|DEVINFO_TAB/) keeps[depth] = 1'
+            '}'
+            '}'
         )
         filter_cmd = (
             f"awk '{awk_script}' {remote_tmp}"
@@ -360,13 +367,23 @@ def run(params):
             f"; echo __OC_FILTER_DONE__"
             f"; wc -c {filtered_tmp}"
         )
+        # 先尝试 awk 过滤，检查结果非空防止 awk 静默失败
+        use_filtered = False
         try:
             run_cmd(tn, filter_cmd, wait=0.5, timeout=8.0)
+            check_cmd = f"[ -s {filtered_tmp} ] && echo __OC_FILTER_OK__ || echo __OC_FILTER_EMPTY__"
+            check_text = run_cmd(tn, check_cmd, wait=0.2, timeout=3.0)
+            if "__OC_FILTER_OK__" in check_text:
+                use_filtered = True
+            else:
+                debug("filter xml produced empty output", {"check_text": check_text[-500:]})
+                log(logs, "步骤 4/5：awk 过滤未产生有效输出，回退完整配置文件…")
         except Exception as filter_err:
             debug("filter xml failed", {"error": repr(filter_err)})
-            # 回退：awk 不可用时用完整文件
-            run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
             log(logs, "步骤 4/5：过滤 XML 失败，正在回传完整配置文件…")
+
+        if not use_filtered:
+            run_cmd(tn, f"cp {remote_tmp} {filtered_tmp}", wait=0.2, timeout=3.0)
 
         xml_bytes = fetch_remote_file_base64(tn, filtered_tmp)
         run_cmd(tn, f"rm -f {filtered_tmp}", wait=0.2, timeout=3.0)
