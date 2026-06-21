@@ -12,8 +12,9 @@
 - 预留 Android 版本目录和发布命名规则
 - 输入光猫 IP、Telnet 端口、登录用户名和登录密码
 - 自动连接设备并解析超级管理员账号/密码
-- 将解密后的 XML 结果保存到用户选择的目录
-- 运行日志在界面中实时显示
+- 解析完成后立即显示超级管理员账号/密码；保存结果不阻塞密码展示
+- 优先只回传必要 XML 片段并保存到用户选择的目录，降低 Telnet 大文件回传导致的断连概率
+- 运行日志在界面中实时显示，包含关键步骤耗时、接收数据大小和错误原因
 - 关闭窗口后进程自动退出
 
 ## 系统要求
@@ -49,6 +50,14 @@
 首次保存到 Downloads 或其他受保护目录时，macOS 可能会弹出文件夹访问授权提示，点击允许即可。
 
 ## 从源码构建
+
+首次 clone 或重新配置仓库后，先安装本地 Git hook：
+
+```bash
+./scripts/install_git_hooks.sh
+```
+
+之后正常提交代码即可。`BUILD_NUMBER` 会在 `git commit` 时由 pre-commit hook 自动递增，发布时不要手动编造构建号。
 
 ```bash
 ./scripts/build_release.sh
@@ -87,12 +96,16 @@ docs/                                      # 项目结构和发布流程说明
 
 - [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md)
 - [`docs/RELEASE_PROCESS.md`](docs/RELEASE_PROCESS.md)
+- [`docs/DESIGN.md`](docs/DESIGN.md)
+- [`docs/releases/`](docs/releases/)：历史版本更新说明
 
 ## 安全说明
 
-- macOS App 会把登录参数缓存在用户 Home 目录下的 `.jiulian_super_password_native_cache.json`，权限设置为 `0600`。
+- macOS App 会把登录参数缓存在 `~/Library/Application Support/com.jiulian.superpassword-tool/cache.json`，并尽量设置权限为 `0600`。
 - Windows App 会把登录参数缓存在 `%APPDATA%\JiulianSuperPasswordTool\cache.json`。
-- 后端调试日志默认写入用户 Home 目录，Windows 前端调试日志写入 `%APPDATA%\JiulianSuperPasswordTool\windows_debug.log`。
+- 调试日志写入平台标准应用数据目录：macOS 为 `~/Library/Application Support/com.jiulian.superpassword-tool/Logs/`，Windows 为 `%APPDATA%\JiulianSuperPasswordTool\` 及其 `Logs\` 子目录。
+- 登录参数缓存中包含 Telnet 登录密码，当前未接入系统钥匙串或 Windows Credential Manager；请只在可信本机使用。
+- Telnet 本身是明文协议，请只在你本人拥有或被授权维护的设备和可信网络中使用。
 - 发布包使用 ad-hoc 签名，不包含 Apple Developer ID 公证。首次运行可能需要在 macOS 安全设置中允许。
 
 ## 多平台发布策略

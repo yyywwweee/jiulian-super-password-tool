@@ -37,7 +37,7 @@
 共享后端层
   |-- shared/backend/jiulian_backend_helper.py
   |
-  | Telnet 登录 / 远端命令 / base64 传回 / XML 解析
+  | Telnet 登录 / 远端命令 / 设备侧过滤 / base64 传回 / XML 解析
   v
 目标光猫设备
 ```
@@ -161,9 +161,10 @@ Windows 缓存及日志位置：
 - 建立 Telnet 连接并完成登录。
 - 在设备侧检查配置文件是否存在。
 - 在设备侧调用解密命令生成临时 XML。
-- 通过 base64 将临时 XML 传回本机。
+- 优先在设备侧过滤出必要 XML 片段，再通过 base64 传回本机；过滤失败时回退完整 XML。
 - 解析 XML 中的超级管理员账号和密码字段。
-- 将原始 XML 保存到用户指定目录。
+- 解密结果一旦解析成功，即通过 `type=credentials` 流式事件提前通知前端展示。
+- 将回传 XML 保存到用户指定目录。
 - 根据设置清理设备侧临时文件。
 - 输出结构化日志和最终结果。
 
@@ -230,7 +231,19 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 - `success`：成功完成。
 - `error`：失败或异常。
 
-### 5.3 最终结果
+### 5.3 提前结果事件
+
+后端解析到超级管理员账号/密码后，会先输出一次凭据事件，让前端立即展示结果，不必等待 XML 保存、临时文件清理等后续步骤全部结束：
+
+```json
+{
+  "type": "credentials",
+  "super_account": "账号",
+  "super_password": "密码"
+}
+```
+
+### 5.4 最终结果
 
 成功时：
 
@@ -267,10 +280,10 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 8. 后端调用设备侧解密命令
 9. 后端过滤/复制解密后的临时 XML（awk 过滤失败自动回退完整文件）
 10. 后端通过 base64 传回临时 XML（断连时重连重试 3 次，5s/10s/15s 退避）
-11. 后端解析超级管理员账号/密码
+11. 后端解析超级管理员账号/密码，并立即发出 `type=credentials` 事件供前端展示
 12. 后端保存 XML 到本机
 13. 后端按设置清理设备侧临时文件（断连时重连重试 3 次，5s/10s/15s 退避）
-14. 前端展示结果并恢复按钮状态
+14. 前端等待最终结果事件，恢复按钮状态
 ```
 
 远端命令执行采用 marker 包裹：
@@ -282,7 +295,9 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 
 结果传输采用 base64：
 
-- 设备侧执行 `base64 <remote_tmp>`。
+- 设备侧优先用 busybox awk 过滤出包含 `aucTeleAccountPassword` 和 `DEVINFO_TAB` 的必要 `Dir` 块。
+- 如果过滤结果为空或过滤命令异常，则回退复制完整解密 XML。
+- 设备侧执行 `base64 <filtered_tmp>`。
 - 输出用 `__OC_B64_BEGIN__` 和 `__OC_B64_END__` 包裹。
 - 本机只收集合法 base64 行。
 - 解码失败会被视为结果校验失败。
@@ -366,10 +381,10 @@ macOS 版本源码：
 
 主要步骤：
 
-1. 安装 PyInstaller 和 Pillow。
-2. 从 PNG 生成 Windows `.ico`。
+1. 安装 PyInstaller。
+2. 直接使用仓库中已归档的 `Assets/AppIcon/windows/AppIcon.ico`，不在日常构建时重新生成图标。
 3. 使用 PyInstaller `--onefile --windowed` 打包。
-4. 将共享后端、`VERSION`、`BUILD_NUMBER` 加入资源。
+4. 将共享后端、`VERSION`、`BUILD_NUMBER`、Windows `.ico` 加入资源。
 5. 输出独立 exe。
 
 ### 8.4 CI 发布
@@ -508,9 +523,9 @@ Android 版建议继续沿用“UI 独立、核心协议复用”的原则：
 
    当前为使用便利牺牲了本地凭据安全。建议新增“不保存密码”选项，并接入系统安全存储。
 
-5. macOS UI 布局固定
+5. macOS UI 布局仍有固定 frame 遗留
 
-   macOS 界面大量使用固定 frame。窗口可调整大小，但控件布局不会充分响应式变化。后续可改为 Auto Layout 或 NSStackView。
+   目前窗口拉伸时顶部控件已锁定在顶部，日志框会随高度自适应；但整体仍有不少固定 frame。后续可继续改为 Auto Layout 或 NSStackView。
 
 6. Git 工具依赖
 

@@ -17,7 +17,7 @@
 │   ├── build_app.sh                           # macOS .app 构建
 │   ├── package_dmg.sh                         # macOS DMG 打包
 │   ├── build_windows.ps1                      # Windows exe 构建，需在 Windows 环境运行
-│   ├── generate_icon.py                       # 生成 macOS 图标资源
+│   ├── generate_icon.py                       # 图标资产维护脚本，非日常构建步骤
 │   └── install_git_hooks.sh                   # 安装构建号自增 hook
 ├── .github/workflows/release-builds.yml       # 多平台 CI 构建和 Release 附件上传
 ├── VERSION                                    # 语义版本号，所有平台共用
@@ -31,8 +31,9 @@
 1. **版本统一**：同一次 Release 的 macOS / Windows / Android 使用同一个 `VERSION` 和 `BUILD_NUMBER`。
 2. **平台隔离**：平台 UI 各自独立；公共协议、后端 helper 和设计资产尽量复用；后端 helper 放在 shared/backend。
 3. **产物命名统一**：GitHub Release 附件使用英文 ASCII 文件名，避免中文文件名在 GitHub 上被截断。
-4. **CI 优先**：Windows 产物由 GitHub Actions 的 Windows runner 构建；macOS 产物可本地构建，也可由 macOS runner 构建。
-5. **Android 预留**：当前不实现 Android，但目录和发布命名先固定，避免后续破坏结构。
+4. **CI 优先**：Windows 产物由 GitHub Actions 的 Windows runner 构建；macOS 产物可本地构建，也可由 macOS runner 构建。正式发布后需要把 Windows 产物回拷到本机/NAS 归档目录。
+5. **图标资产固定**：日常构建直接使用 `Assets/AppIcon/` 中已提交的 `.icns` / `.ico`，只有修改图标设计时才运行生成脚本。
+6. **Android 预留**：当前不实现 Android，但目录和发布命名先固定，避免后续破坏结构。
 
 ## 平台产物命名
 

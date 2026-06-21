@@ -35,10 +35,11 @@ JiulianSuperPasswordTool-<version>-build<build>-android-arm64.apk
 
 ## 推荐发布步骤
 
-1. 修改 `VERSION`。
-2. 提交代码，让 pre-commit hook 递增 `BUILD_NUMBER` 并生成版本信息。
-3. 推送 `main`。
-4. 创建 GitHub Release：
+1. 确认本地 Git hook 已安装：`./scripts/install_git_hooks.sh`。
+2. 修改 `VERSION`，不要手写或猜测最终 `BUILD_NUMBER`。
+3. 提交代码，让 pre-commit hook 自动递增 `BUILD_NUMBER` 并把版本文件加入本次 commit。
+4. 推送 `main`。
+5. 创建 GitHub Release：
 
    ```bash
    gh release create v<VERSION> \
@@ -47,14 +48,17 @@ JiulianSuperPasswordTool-<version>-build<build>-android-arm64.apk
      --notes-file /tmp/release-notes.md
    ```
 
-5. GitHub Actions 自动构建并上传：
+6. GitHub Actions 自动构建并上传：
    - macOS DMG / app.zip
    - Windows exe
    - Android 未来加入
 
-6. 检查 Release 附件是否齐全、命名是否正确。
+7. 检查 Release 附件是否齐全、命名是否正确。
+8. 如需本地/NAS 归档，Release 完成后把 GitHub Actions 或 Release 中生成的 Windows exe 回拷到本机 `dist/windows/`，并复制到 NAS 对应版本目录。不要只归档本地 macOS DMG/ZIP。
 
 ## Release 说明模板
+
+Release 页面已经有标题，notes 文件不要再重复写一级标题；正文统一使用 `## 更新说明`。
 
 ```markdown
 ## 更新说明
@@ -79,6 +83,17 @@ JiulianSuperPasswordTool-<version>-build<build>-android-arm64.apk
 
 - macOS 发布包为 ad-hoc 签名，未进行 Apple Developer ID 公证。
 - Windows exe 未进行代码签名时，SmartScreen 可能提示风险，需要用户手动允许运行。
+```
+
+## 发布后本地/NAS 归档
+
+`build_release.sh` 只会归档本机生成的 macOS `.dmg` 和 `.app.zip`。正式发布后，Windows exe 由 GitHub Actions 的 Windows runner 生成，需要从 GitHub Release 或 Actions artifact 下载回本机，再放入同一个 NAS 版本目录。
+
+示例：
+
+```text
+dist/windows/JiulianSuperPasswordTool-<version>-build<build>-windows-x64.exe
+/Volumes/西数紫盘4T/jiulian-super-password-tool-releases/v<version>/build<build>/
 ```
 
 ## 本地构建归档

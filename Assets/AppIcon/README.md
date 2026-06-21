@@ -9,13 +9,14 @@ Assets/AppIcon/
 ├── source/AppIcon-1024.png          # 图标源图 / 母版
 ├── macos/AppIcon.icns               # macOS App 打包使用
 ├── macos/AppIcon.iconset/           # macOS 多尺寸图标资产
-└── windows/AppIcon.ico              # Windows exe 打包使用
+└── windows/AppIcon.ico              # Windows exe 打包使用，含 16/20/24/32/40/48/64/128/256 尺寸
 ```
 
 ## 规则
 
 - 普通构建脚本只复制或引用这里已经提交的图标资产。
 - 普通构建不应重新生成图标，也不应修改本目录。
+- Windows `.ico` 从同一 1024 母版生成，避免标题栏、Alt-Tab、任务栏在不同缩放比例下取到低质量小图。
 - 只有需要修改图标设计时，才运行：
 
 ```bash
