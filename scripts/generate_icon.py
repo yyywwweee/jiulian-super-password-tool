@@ -94,10 +94,9 @@ for size, name in sizes:
 
 import subprocess
 subprocess.run(["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)], check=True)
-# Windows .ico：独立 LANCZOS 缩放每级尺寸再拼装，和 macOS 清晰度一致
+# Windows .ico：从 1024 原图直接生成，PIL 内部每帧独立 LANCZOS 缩放
 ico_sizes = [(16,16),(20,20),(24,24),(32,32),(40,40),(48,48),(64,64),(128,128),(256,256)]
-img_ico = img.resize((256, 256), Image.Resampling.LANCZOS)
-img_ico.save(ICO, format="ICO", sizes=ico_sizes)
+img.save(ICO, format="ICO", sizes=ico_sizes)
 print(PNG1024)
 print(ICONSET)
 print(ICNS)
