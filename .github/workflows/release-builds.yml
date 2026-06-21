@@ -26,11 +26,6 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install Python dependencies for icon generation
-        run: python3 -m pip install pillow
       - name: Build macOS app and DMG
         run: ./scripts/build_release.sh
       - name: Prepare macOS release assets
