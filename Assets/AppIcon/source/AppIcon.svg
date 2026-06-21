@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="blueCircle" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#27B0EF"/>
+      <stop offset="100%" stop-color="#2092CE"/>
+    </radialGradient>
+  </defs>
+  <!-- White rounded background plate -->
+  <rect x="0" y="0" width="1024" height="1024" rx="230" ry="230" fill="white"/>
+  <!-- Blue gradient circle -->
+  <circle cx="512" cy="512" r="405" fill="url(#blueCircle)"/>
+  <!-- WiFi signal arcs -->
+  <path d="M 350,430 A 162,162 0 0,1 674,430" fill="none" stroke="white" stroke-width="15" stroke-linecap="round"/>
+  <path d="M 258,430 A 298,298 0 0,1 766,430" fill="none" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <!-- Signal center dot -->
+  <circle cx="512" cy="430" r="16" fill="white"/>
+  <!-- Left antenna -->
+  <line x1="382" y1="535" x2="318" y2="415" stroke="white" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="318" cy="415" r="10" fill="white"/>
+  <!-- Right antenna -->
+  <line x1="642" y1="535" x2="706" y2="415" stroke="white" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="706" cy="415" r="10" fill="white"/>
+  <!-- Modem body -->
+  <rect x="318" y="528" width="388" height="132" rx="38" ry="38" fill="white"/>
+  <!-- Modem front panel -->
+  <rect x="365" y="612" width="294" height="30" rx="14" ry="14" fill="#20A8E7"/>
+  <!-- Left indicator -->
+  <ellipse cx="401" cy="587" rx="29" ry="29" fill="#20A8E7"/>
+  <ellipse cx="396" cy="587" rx="9" ry="9" fill="white"/>
+  <!-- Right indicators -->
+  <circle cx="532" cy="585" r="12" fill="#20A8E7"/>
+  <circle cx="532" cy="585" r="5" fill="white"/>
+  <circle cx="592" cy="585" r="12" fill="#20A8E7"/>
+  <circle cx="592" cy="585" r="5" fill="white"/>
+</svg>
