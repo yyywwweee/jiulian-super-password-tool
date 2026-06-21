@@ -94,7 +94,7 @@ for size, name in sizes:
 
 import subprocess
 subprocess.run(["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)], check=True)
-img.save(ICO, sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+img.save(ICO, sizes=[(16,16),(20,20),(24,24),(32,32),(40,40),(48,48),(64,64),(128,128),(256,256)])
 print(PNG1024)
 print(ICONSET)
 print(ICNS)
