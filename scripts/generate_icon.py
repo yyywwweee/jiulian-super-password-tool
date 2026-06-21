@@ -12,6 +12,9 @@ PNG1024 = SOURCE / "AppIcon-1024.png"
 ICNS = MACOS / "AppIcon.icns"
 ICO = WINDOWS / "AppIcon.ico"
 
+# 图标源方案：不使用 SVG；直接用 Pillow 绘制 1024 PNG 母版，
+# 再从同一个 1024 母版分别生成 macOS .icns 和 Windows 多尺寸 .ico。
+
 SOURCE.mkdir(parents=True, exist_ok=True)
 MACOS.mkdir(parents=True, exist_ok=True)
 WINDOWS.mkdir(parents=True, exist_ok=True)
