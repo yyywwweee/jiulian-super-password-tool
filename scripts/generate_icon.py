@@ -98,56 +98,17 @@ import io
 subprocess.run(["iconutil", "-c", "icns", str(ICONSET), "-o", str(ICNS)], check=True)
 
 # === Windows .ico ===
-# 从头超采样绘制每个尺寸（8x），再手写 .ico 打包
+# 和 macOS 一模一样：从 1024 母版逐尺寸独立 LANCZOS 缩放，手写打包
 ico_sizes = [(16,16),(20,20),(24,24),(32,32),(40,40),(48,48),(64,64),(128,128),(256,256)]
-images = {}
+images, entries, png_data, offset = {}, [], [], 6 + 16 * len(ico_sizes)
 for w, h in ico_sizes:
-    # 8x supersampling
-    SS2 = 8
-    W2, cx2, cy2 = w * SS2, w * SS2 // 2, h * SS2 // 2
-    img2 = Image.new("RGBA", (W2, W2), (0,0,0,0))
-    d2 = ImageDraw.Draw(img2)
-    corner2 = int(W2 * 0.225)
-    d2.rounded_rectangle((0, 0, W2-1, W2-1), radius=corner2, fill=(255,255,255,255))
-    R2 = int(W2 * 0.395)
-    for yy in range(cy2 - R2, cy2 + R2 + 1):
-        for xx in range(cx2 - R2, cx2 + R2 + 1):
-            dx2, dy2 = xx - cx2, yy - cy2
-            if dx2*dx2 + dy2*dy2 <= R2*R2:
-                t2 = (dy2 + R2) / (2*R2)
-                img2.putpixel((xx, yy), (int(37-10*t2), int(184-28*t2), int(236-2*t2), 255))
-    d2 = ImageDraw.Draw(img2)
-    white2, blue2 = (255,255,255,255), (32,168,231,255)
-    for rr2_pct, ww2_pct in [(0.160, 0.014), (0.293, 0.012)]:
-        rr2, ww2 = int(rr2_pct*W2), max(1, int(ww2_pct*W2))
-        bbox2 = (cx2-rr2, int(W2*0.395)-rr2, cx2+rr2, int(W2*0.395)+rr2)
-        d2.arc(bbox2, 210, 330, fill=white2, width=ww2)
-    dr2 = max(1, int(W2*0.0156))
-    d2.ellipse((cx2-dr2, int(W2*0.395)-dr2, cx2+dr2, int(W2*0.395)+dr2), fill=white2)
-    lw2 = max(2, int(W2*0.0195))
-    d2.line((int(W2*0.373), int(W2*0.522), int(W2*0.311), int(W2*0.405)), fill=white2, width=lw2)
-    d2.line((int(W2*0.627), int(W2*0.522), int(W2*0.689), int(W2*0.405)), fill=white2, width=lw2)
-    dr2 = max(2, int(W2*0.01))
-    d2.ellipse((int(W2*0.301), int(W2*0.395), int(W2*0.321), int(W2*0.415)), fill=white2)
-    d2.ellipse((int(W2*0.680), int(W2*0.395), int(W2*0.700), int(W2*0.415)), fill=white2)
-    d2.rounded_rectangle((int(W2*0.311), int(W2*0.516), int(W2*0.689), int(W2*0.645)), radius=max(3, int(W2*0.037)), fill=white2)
-    d2.rounded_rectangle((int(W2*0.357), int(W2*0.598), int(W2*0.644), int(W2*0.627)), radius=max(2, int(W2*0.014)), fill=blue2)
-    d2.ellipse((int(W2*0.363), int(W2*0.545), int(W2*0.420), int(W2*0.602)), fill=blue2)
-    d2.ellipse((int(W2*0.383), int(W2*0.565), int(W2*0.400), int(W2*0.582)), fill=white2)
-    for px2 in [int(W2*0.520), int(W2*0.578)]:
-        d2.ellipse((px2-int(W2*0.012), int(W2*0.571)-int(W2*0.012), px2+int(W2*0.012), int(W2*0.571)+int(W2*0.012)), fill=blue2)
-        d2.ellipse((px2-int(W2*0.005), int(W2*0.571)-int(W2*0.005), px2+int(W2*0.005), int(W2*0.571)+int(W2*0.005)), fill=white2)
-    images[(w,h)] = img2.resize((w, h), Image.Resampling.LANCZOS)
-
-# 手写 ICO（每个尺寸独立 PNG 数据）
-entries, png_data, offset = [], [], 6 + 16 * len(ico_sizes)
+    images[(w,h)] = img.resize((w, h), Image.Resampling.LANCZOS)
 for (w, h), im in sorted(images.items(), key=lambda x: x[0][0]*x[0][1], reverse=True):
     buf = io.BytesIO()
     im.save(buf, format="PNG")
     png_bytes = buf.getvalue()
     png_data.append(png_bytes)
-    ew = 0 if w >= 256 else w
-    eh = 0 if h >= 256 else h
+    ew, eh = (0 if w >= 256 else w), (0 if h >= 256 else h)
     entries.append(struct.pack('<BBBBHHII', ew, eh, 0, 0, 1, 32, len(png_bytes), offset))
     offset += len(png_bytes)
 with open(ICO, 'wb') as f:
