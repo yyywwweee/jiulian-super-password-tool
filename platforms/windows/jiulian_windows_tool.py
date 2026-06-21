@@ -129,25 +129,20 @@ class App(tk.Tk):
         icon_path = self._resolve_icon_path()
         if not icon_path:
             return
-        # tkinter iconbitmap 设置标题栏小图标
+        # tkinter iconbitmap 负责标题栏和基本任务栏图标（和 macOS Info.plist 同理）
         try:
             self.iconbitmap(default=icon_path)
         except Exception:
             pass
-        # Windows: 用 WM_SETICON 指定尺寸分别设置
+        # Windows 任务栏大缩略图需要 WM_SETICON ICON_BIG，取最大尺寸
         if sys.platform == "win32":
             try:
                 import ctypes as _ct
                 hwnd = int(self.frame(), 16)
                 icon_win = icon_path.replace("/", "\\")
-                # ICON_BIG: 48x48 用于任务栏
-                hicon_big = _ct.windll.user32.LoadImageW(0, icon_win, 1, 48, 48, 0x00000010)
-                if hicon_big:
-                    _ct.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon_big)
-                # ICON_SMALL: 32x32 用于标题栏
-                hicon_small = _ct.windll.user32.LoadImageW(0, icon_win, 1, 32, 32, 0x00000010)
-                if hicon_small:
-                    _ct.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon_small)
+                hicon = _ct.windll.user32.LoadImageW(0, icon_win, 1, 256, 256, 0x00000010)
+                if hicon:
+                    _ct.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)
             except Exception:
                 pass
 
