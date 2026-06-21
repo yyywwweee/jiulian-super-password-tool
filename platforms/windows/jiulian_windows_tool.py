@@ -122,7 +122,9 @@ class App(tk.Tk):
         ]
         for path in candidates:
             if path.is_file():
+                write_debug("icon resolved", str(path))
                 return str(path)
+        write_debug("icon not found", str([str(p) for p in candidates]))
         return None
 
     def _set_app_icon(self) -> None:
@@ -131,7 +133,7 @@ class App(tk.Tk):
             return
         # tkinter iconbitmap 负责标题栏和基本任务栏图标（和 macOS Info.plist 同理）
         try:
-            self.iconbitmap(default=icon_path)
+            self.iconbitmap(bitmap=icon_path)
         except Exception:
             pass
         # Windows 任务栏大缩略图需要 WM_SETICON ICON_BIG，取最大尺寸
