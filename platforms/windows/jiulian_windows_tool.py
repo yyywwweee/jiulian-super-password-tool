@@ -127,22 +127,27 @@ class App(tk.Tk):
 
     def _set_app_icon(self) -> None:
         icon_path = self._resolve_icon_path()
-        if icon_path:
-            try:
-                self.iconbitmap(default=icon_path)
-            except Exception:
-                pass
-        # Windows: 额外设置窗口图标确保任务栏也生效
+        if not icon_path:
+            return
+        # tkinter iconbitmap 设置标题栏小图标
+        try:
+            self.iconbitmap(default=icon_path)
+        except Exception:
+            pass
+        # Windows: 用 WM_SETICON 指定尺寸分别设置
         if sys.platform == "win32":
             try:
                 import ctypes as _ct
                 hwnd = int(self.frame(), 16)
-                _icon = icon_path.replace("/", "\\") if icon_path else None
-                if _icon:
-                    hicon = _ct.windll.user32.LoadImageW(0, _icon, 1, 0, 0, 0x00000010 | 0x00000020)
-                    if hicon:
-                        _ct.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)  # WM_SETICON ICON_BIG
-                        _ct.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon)  # WM_SETICON ICON_SMALL
+                icon_win = icon_path.replace("/", "\\")
+                # ICON_BIG: 48x48 用于任务栏
+                hicon_big = _ct.windll.user32.LoadImageW(0, icon_win, 1, 48, 48, 0x00000010)
+                if hicon_big:
+                    _ct.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon_big)
+                # ICON_SMALL: 32x32 用于标题栏
+                hicon_small = _ct.windll.user32.LoadImageW(0, icon_win, 1, 32, 32, 0x00000010)
+                if hicon_small:
+                    _ct.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon_small)
             except Exception:
                 pass
 
