@@ -438,6 +438,11 @@ def run(params):
         run_cmd(tn, f"rm -f {filtered_tmp}", wait=0.2, timeout=3.0)
 
         fetch_elapsed = elapsed_since(step_start)
+        if use_filtered:
+            # 过滤回传的是多个 Dir 片段；保存前补成单根 XML，方便浏览器/编辑器直接打开。
+            stripped_xml = xml_bytes.strip()
+            if not stripped_xml.startswith(b"<Config"):
+                xml_bytes = b'<Config Name="ROOT">\n' + stripped_xml + b'\n</Config>\n'
         xml_text = xml_bytes.decode("utf-8", errors="replace")
         super_account = parse_value(xml_text, "aucTeleAccountName")
         super_password = parse_value(xml_text, "aucTeleAccountPassword")
@@ -451,7 +456,7 @@ def run(params):
         out_file = output_dir / f"jiulian_super_password_{safe_host}_{ts}.xml"
         out_file.write_bytes(xml_bytes)
         if use_filtered:
-            log(logs, f"步骤 4/5：结果已保存，仅回传必要 Dir 块（接收 {human_bytes(len(xml_bytes))}，用时 {fetch_elapsed}）。")
+            log(logs, f"步骤 4/5：结果已保存，仅回传必要 Dir 块并补全 ROOT XML（保存 {human_bytes(len(xml_bytes))}，用时 {fetch_elapsed}）。")
         else:
             log(logs, f"步骤 4/5：结果已保存，接收 {human_bytes(len(xml_bytes))}（用时 {fetch_elapsed}）。")
 

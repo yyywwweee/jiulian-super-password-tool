@@ -297,6 +297,7 @@ REMOTE_DECRYPT_SCRIPT = "/home/cli/decrypt/decrypt_file"
 
 - 设备侧优先用 busybox awk 过滤出包含 `aucTeleAccountPassword` 和 `DEVINFO_TAB` 的必要 `Dir` 块。
 - 如果过滤结果为空或过滤命令异常，则回退复制完整解密 XML。
+- 过滤模式下，保存本机文件前会补上 `<Config Name="ROOT">...</Config>` 单根节点，保证结果 XML 可被浏览器/编辑器直接打开。
 - 设备侧执行 `base64 <filtered_tmp>`。
 - 输出用 `__OC_B64_BEGIN__` 和 `__OC_B64_END__` 包裹。
 - 本机只收集合法 base64 行。
