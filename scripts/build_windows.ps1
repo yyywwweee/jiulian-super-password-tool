@@ -25,6 +25,7 @@ $backendData = "$(Join-Path $ProjectRoot 'shared\backend\jiulian_backend_helper.
 $backendVendorData = "$(Join-Path $ProjectRoot 'shared\backend\vendor')${sep}shared/backend/vendor"
 $versionData = "$(Join-Path $ProjectRoot 'VERSION')${sep}."
 $buildData = "$(Join-Path $ProjectRoot 'BUILD_NUMBER')${sep}."
+$iconData = "$(Join-Path $ProjectRoot 'Assets\AppIcon\windows\AppIcon.ico')${sep}Assets/AppIcon/windows"
 
 python -m PyInstaller `
   --noconfirm `
@@ -40,6 +41,7 @@ python -m PyInstaller `
   --add-data $backendVendorData `
   --add-data $versionData `
   --add-data $buildData `
+  --add-data $iconData `
   $entry
 
 $exe = Join-Path $dist "$name.exe"

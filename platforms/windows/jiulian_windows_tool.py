@@ -15,6 +15,14 @@ import time
 import traceback
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+import ctypes
+
+# Windows 任务栏图标需要设置 AppUserModelID
+if sys.platform == "win32":
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("com.jiulian.superpassword-tool")
+    except Exception:
+        pass
 
 APP_NAME = "九联光猫获取超级密码工具"
 ORG_DIR_NAME = "JiulianSuperPasswordTool"
@@ -83,6 +91,7 @@ class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title(f"{APP_NAME} {DISPLAY_VERSION}")
+        self._set_app_icon()
         self.geometry("900x800")
         self.minsize(840, 700)
         self.log_queue: "queue.Queue[tuple[str, object]]" = queue.Queue()
@@ -104,6 +113,38 @@ class App(tk.Tk):
         self._build_ui()
         self._fit_initial_window()
         self.after(80, self._drain_queue)
+
+    def _resolve_icon_path(self) -> str | None:
+        candidates = [
+            resource_root() / "Assets" / "AppIcon" / "windows" / "AppIcon.ico",
+            resource_root() / "AppIcon.ico",
+            pathlib.Path(__file__).resolve().parents[2] / "Assets" / "AppIcon" / "windows" / "AppIcon.ico",
+        ]
+        for path in candidates:
+            if path.is_file():
+                return str(path)
+        return None
+
+    def _set_app_icon(self) -> None:
+        icon_path = self._resolve_icon_path()
+        if icon_path:
+            try:
+                self.iconbitmap(default=icon_path)
+            except Exception:
+                pass
+        # Windows: 额外设置窗口图标确保任务栏也生效
+        if sys.platform == "win32":
+            try:
+                import ctypes as _ct
+                hwnd = int(self.frame(), 16)
+                _icon = icon_path.replace("/", "\\") if icon_path else None
+                if _icon:
+                    hicon = _ct.windll.user32.LoadImageW(0, _icon, 1, 0, 0, 0x00000010 | 0x00000020)
+                    if hicon:
+                        _ct.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)  # WM_SETICON ICON_BIG
+                        _ct.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon)  # WM_SETICON ICON_SMALL
+            except Exception:
+                pass
 
     def _load_cache(self) -> None:
         try:
