@@ -290,7 +290,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 日志框：固定底部，宽度+高度都跟随窗口拉伸
         let logBox = NSBox(frame: NSRect(x: 30, y: 20, width: 820, height: 118)); logBox.title = "运行日志"; logBox.autoresizingMask = [.width, .height]; v.addSubview(logBox)
-        let scroll = NSScrollView(frame: NSRect(x: 42, y: 33, width: 796, height: 85)); scroll.hasVerticalScroller = true; scroll.autoresizingMask = [.width, .height]; logView.isEditable = false; logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular); logView.backgroundColor = .textBackgroundColor; scroll.documentView = logView; v.addSubview(scroll)
+        let scroll = NSScrollView(frame: NSRect(x: 42, y: 33, width: 796, height: 85))
+        scroll.hasVerticalScroller = true
+        scroll.autoresizingMask = [.width, .height]
+        scroll.borderType = .bezelBorder
+
+        // NSTextView 默认 frame 是 .zero。直接作为 NSScrollView.documentView 时，
+        // 云端打包出来的 App 里可能出现 textStorage 有内容但可视区域为 0，表现为日志框空白。
+        // 显式按 scroll 内容区初始化尺寸，并让宽度跟随滚动视图。
+        let contentSize = scroll.contentSize
+        logView.frame = NSRect(origin: .zero, size: contentSize)
+        logView.minSize = NSSize(width: 0, height: contentSize.height)
+        logView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        logView.isVerticallyResizable = true
+        logView.isHorizontallyResizable = false
+        logView.autoresizingMask = [.width]
+        logView.textContainer?.containerSize = NSSize(width: contentSize.width, height: CGFloat.greatestFiniteMagnitude)
+        logView.textContainer?.widthTracksTextView = true
+        logView.isEditable = false
+        logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        logView.backgroundColor = .textBackgroundColor
+        scroll.documentView = logView
+        v.addSubview(scroll)
 
         appendLog("当前软件：\(AppConstants.appName) \(AppVersion.detail)")
         appendLog("如果失败，日志会用红色显示原因；修正信息后可以直接重试。")
